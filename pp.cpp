@@ -535,7 +535,7 @@ void pp_event_remove(pp_event_t ev)
     xQueueSend(xEventQueue, &msg, 0);
 }
 
-void pp_init()
+void pp_start()
 {
     ESP_EVENT_DECLARE_BASE(EV_BASE);
     myloop.base = EV_BASE;

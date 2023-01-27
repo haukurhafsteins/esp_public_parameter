@@ -77,7 +77,7 @@ typedef void* pp_event_t;
  * @brief Initialize the Public Parameter handler.
  * 
  */
-void pp_init();
+void pp_start();
 
 /**
  * @brief Create a public float parameter.
