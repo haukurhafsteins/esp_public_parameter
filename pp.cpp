@@ -212,7 +212,7 @@ pp_t pp_create_float(const char *name, pp_evloop_t *evloop, esp_event_handler_t 
 {
     return pp_create(name, evloop, TYPE_FLOAT, event_write_cb, valueptr);
 }
-bool pp_delete_float(pp_t pp)
+bool pp_delete(pp_t pp)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
     if (p == NULL)

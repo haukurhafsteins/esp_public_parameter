@@ -87,7 +87,7 @@ void pp_init();
  * @return pp_t 
  */
 pp_t pp_create_float(const char* name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, float* valueptr);
-bool pp_delete_float(pp_t pp);
+bool pp_delete(pp_t pp);
 bool pp_post_newstate_float(pp_t pp, float f);
 bool pp_post_write_float(pp_t pp, float value);
 float pp_get_float_value(pp_t pp);
