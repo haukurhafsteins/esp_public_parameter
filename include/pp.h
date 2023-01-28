@@ -77,7 +77,11 @@ typedef void* pp_event_t;
  * @brief Initialize the Public Parameter handler.
  * 
  */
+<<<<<<< HEAD
 void pp_init(unsigned task_priority);
+=======
+void pp_start();
+>>>>>>> 4c6b326a86d2e46b9d4f181a4ed06d994a651a9e
 
 /**
  * @brief Create a public float parameter.
@@ -87,7 +91,7 @@ void pp_init(unsigned task_priority);
  * @return pp_t 
  */
 pp_t pp_create_float(const char* name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, float* valueptr);
-bool pp_delete_float(pp_t pp);
+bool pp_delete(pp_t pp);
 bool pp_post_newstate_float(pp_t pp, float f);
 bool pp_post_write_float(pp_t pp, float value);
 float pp_get_float_value(pp_t pp);
