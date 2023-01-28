@@ -535,14 +535,14 @@ void pp_event_remove(pp_event_t ev)
     xQueueSend(xEventQueue, &msg, 0);
 }
 
-void pp_init()
+void pp_init(unsigned task_priority)
 {
     ESP_EVENT_DECLARE_BASE(EV_BASE);
     myloop.base = EV_BASE;
     esp_event_loop_args_t loop_args = {
         .queue_size = 16,
         .task_name = "pp_task",
-        .task_priority = CONFIG_MFM_MASI_PP_TASK_PRIORITY,
+        .task_priority = task_priority,
         .task_stack_size = 4096,
         .task_core_id = 0};
 
