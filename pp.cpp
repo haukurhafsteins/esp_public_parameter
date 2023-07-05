@@ -40,10 +40,9 @@ typedef struct
 
 static const char *unit_str[] = {"", "V", "A", "Wh", "lpm", "Kg", "%", "g"};
 static public_parameter_t par_list[MAX_PUBLIC_PARAMETERS];
-static esp_event_base_t EV_BASE = "PP_BASE";
 static pp_evloop_t myloop;
 static std::map<std::string, public_parameter_t *> nameToPP;
-
+ESP_EVENT_DEFINE_BASE(PP_EVENTS);
 static int32_t event_id_counter = ID_COUNTER_START;
 
 static const char *TAG = "PP";
@@ -408,146 +407,15 @@ pp_t pp_get_par(int index)
     return (pp_t) &par_list[index];
 }
 
-class EvLoopEvent
-{
-public:
-    pp_evloop_t *evloop;
-    int64_t period_us;
-    int64_t next_timeout_us;
-    int64_t start_time_us;
-    int period_counter;
-    bool periodic;
-    int id;
-    void *data;
-    size_t data_size;
-};
-
-typedef enum
-{
-    CMD_REMOVE,
-    CMD_ADD
-} queue_cmd_t;
-
-typedef struct
-{
-    queue_cmd_t cmd;
-    EvLoopEvent *evp;
-} queue_msg_t;
-
-static std::list<EvLoopEvent *> eventList = {};
-static QueueHandle_t xEventQueue = NULL;
-
-static bool compare(const EvLoopEvent *first, const EvLoopEvent *second)
-{
-    if (first->next_timeout_us <= second->next_timeout_us)
-        return true;
-    return false;
-}
-static void calculate_next_timeout(EvLoopEvent* ev)
-{
-    ev->period_counter++;
-    ev->next_timeout_us = ev->start_time_us + ev->period_us * ev->period_counter;
-}
-
-static void pp_event_task(void *)
-{
-    queue_msg_t msg;
-    TickType_t ticks;
-    while (1)
-    {
-        if (eventList.empty())
-        {
-            ticks = 1000 / portTICK_PERIOD_MS;
-            //ESP_LOGI(TAG, "sleep_time %d ms - no events", 1000);
-        }
-        else
-        {
-            auto ev = eventList.front();
-            ticks = (ev->period_us / 1000) / portTICK_PERIOD_MS;
-            //ESP_LOGI(TAG, "sleep_time %lld us", ev->period_us);
-        }
-        if (xQueueReceive(xEventQueue, &msg, ticks) == pdTRUE)
-        {
-            switch (msg.cmd)
-            {
-            case CMD_REMOVE:
-                //ESP_LOGW(TAG, "Removing %s", msg.evp->evloop->base);
-                eventList.remove(msg.evp);
-                break;
-            case CMD_ADD:
-                //ESP_LOGI(TAG, "%s: Adding %lld us (periodic=%d) timer for %s", __func__, msg.evp->period_us, msg.evp->periodic, msg.evp->evloop->base);
-                eventList.push_back(msg.evp);
-                break;
-            }
-        }
-        else
-        {
-            // Timeout, raise event
-            if (eventList.empty())
-                continue;
-
-            auto ev = eventList.front();
-            //ESP_LOGW(TAG, "Posting %lld us timer to %s", ev->period_us, ev->evloop->base);
-            if (!pp_evloop_post(ev->evloop, ev->id, ev->data, ev->data_size))
-                ESP_LOGE(TAG, "Failed posting event to %s", ev->evloop->base);
-            if (ev->periodic)
-                calculate_next_timeout(ev);
-            else
-            {
-                eventList.remove(ev);
-                delete ev;
-            }
-        }
-        eventList.sort(compare);
-    }
-}
-
-pp_event_t pp_event_add(pp_evloop_t *evloop, int id, int ms, bool periodic, void *data, size_t data_size)
-{
-    if (ms < 1)
-    {
-        ESP_LOGE(TAG, "%s: Invalid period, must be 1 or bigger", __func__);
-        return NULL;
-    }
-    auto evp = new EvLoopEvent();
-    evp->evloop = evloop;
-    evp->id = id;
-    evp->period_us = ms * 1000;
-    evp->start_time_us = esp_timer_get_time();
-    evp->periodic = periodic;
-    evp->data = data;
-    evp->data_size = data_size;
-    evp->next_timeout_us = 0;
-    evp->period_counter = 0;
-    calculate_next_timeout(evp);
-    queue_msg_t msg = {CMD_ADD, evp};
-    xQueueSend(xEventQueue, &msg, 0);
-    return (pp_event_t)evp;
-}
-
-void pp_event_remove(pp_event_t ev)
-{
-    if (ev == NULL)
-        return;
-
-    auto evp = (EvLoopEvent *)ev;
-    queue_msg_t msg = {CMD_REMOVE, evp};
-    xQueueSend(xEventQueue, &msg, 0);
-}
-
 void pp_init(unsigned task_priority)
 {
-    ESP_EVENT_DECLARE_BASE(EV_BASE);
-    myloop.base = EV_BASE;
-    esp_event_loop_args_t loop_args = {
-        .queue_size = 16,
-        .task_name = "pp_task",
-        .task_priority = task_priority,
-        .task_stack_size = 4096,
-        .task_core_id = 0};
+    // myloop.base = PP_EVENTS;
+    // esp_event_loop_args_t loop_args = {
+    //     .queue_size = 16,
+    //     .task_name = "pp_task",
+    //     .task_priority = task_priority,
+    //     .task_stack_size = 4096,
+    //     .task_core_id = 0};
 
-    ESP_ERROR_CHECK(esp_event_loop_create(&loop_args, &myloop.loop_handle));
-
-    xEventQueue = xQueueCreate(2, sizeof(queue_msg_t));
-    xTaskCreate(&pp_event_task, "pp_event_task", 512 * 4, NULL, 3, NULL);
+    // ESP_ERROR_CHECK(esp_event_loop_create(&loop_args, &myloop.loop_handle));
 }

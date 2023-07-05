@@ -52,18 +52,6 @@ typedef struct
 
 typedef struct
 {
-    void* hd;
-    int socket;
-} pp_webclient_t;
-
-typedef struct
-{
-    pp_webclient_t client;
-    char payload[0];
-} pp_websocket_data_t;
-
-typedef struct
-{
     esp_event_loop_handle_t loop_handle;
     esp_event_base_t base;
 } pp_evloop_t;
@@ -77,11 +65,7 @@ typedef void* pp_event_t;
  * @brief Initialize the Public Parameter handler.
  * 
  */
-<<<<<<< HEAD
 void pp_init(unsigned task_priority);
-=======
-void pp_start();
->>>>>>> 4c6b326a86d2e46b9d4f181a4ed06d994a651a9e
 
 /**
  * @brief Create a public float parameter.
