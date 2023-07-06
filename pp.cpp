@@ -138,7 +138,7 @@ void pp_event_handler_register(pp_evloop_t *evloop, int32_t id, esp_event_handle
     if (evloop->loop_handle == NULL)
         ESP_ERROR_CHECK(esp_event_handler_register(evloop->base, id, cb, p));
     else
-        ESP_ERROR_CHECK(esp_event_handler_register_with(evloop->loop_handle, evloop->base, id, cb, p));
+        ESP_ERROR_CHECK(esp_event_handler_instance_register_with(evloop->loop_handle, evloop->base, id, cb, p, NULL));
 }
 
 void pp_event_handler_unregister(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb)
@@ -409,13 +409,5 @@ pp_t pp_get_par(int index)
 
 void pp_init(unsigned task_priority)
 {
-    // myloop.base = PP_EVENTS;
-    // esp_event_loop_args_t loop_args = {
-    //     .queue_size = 16,
-    //     .task_name = "pp_task",
-    //     .task_priority = task_priority,
-    //     .task_stack_size = 4096,
-    //     .task_core_id = 0};
 
-    // ESP_ERROR_CHECK(esp_event_loop_create(&loop_args, &myloop.loop_handle));
 }
