@@ -125,6 +125,7 @@ static pp_t pp_create(const char *name, pp_evloop_t *evloop, parameter_type_t ty
     p->conf.type = type;
     p->state.valueptr = valueptr;
     p->conf.tojson = NULL;
+    p->state.str_hdr = NULL;
     if (event_write_cb)
         pp_event_handler_register(evloop, p->state.write_id, event_write_cb, p);
     return p;
@@ -358,6 +359,21 @@ pp_float_array_t *pp_allocate_float_array(size_t len)
     p->len = len;
     return p;
 }
+
+// pp_float_array_t *pp_allocate_float_array_with_hdr(char* hdr, size_t len)
+// {
+//     size_t hdr_size = strlen(hdr);
+//     uint8_t *p = (uint8_t *)calloc(1, hdr_size + pp_get_float_array_size(len));
+//     if (p == 0)
+//     {
+//         ESP_LOGE(TAG, "Failed to allocate %d bytes", len);
+//         esp_backtrace_print(5);
+//         return NULL;
+//     }
+//     pp_float_array_t *fhdr = (pp_float_array_t *)&p[hdr_size];
+//     fhdr->len = len;
+//     return fhdr;
+// }
 
 size_t pp_get_float_array_size(size_t len)
 {
