@@ -125,7 +125,6 @@ static pp_t pp_create(const char *name, pp_evloop_t *evloop, parameter_type_t ty
     p->conf.type = type;
     p->state.valueptr = valueptr;
     p->conf.tojson = NULL;
-    p->state.str_hdr = NULL;
     if (event_write_cb)
         pp_event_handler_register(evloop, p->state.write_id, event_write_cb, p);
     return p;
