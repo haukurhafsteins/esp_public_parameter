@@ -22,7 +22,7 @@ typedef struct
         const char *name;
         pp_unit_t unit;
         pp_evloop_t *owner;
-        tojson_cb_t tojson;
+        //tojson_cb_t tojson;
         parameter_type_t type;
         char *format_str;
     } conf;
@@ -40,7 +40,6 @@ typedef struct
 
 static const char *unit_str[] = {"", "V", "A", "Wh", "lpm", "Kg", "%", "g"};
 static public_parameter_t par_list[MAX_PUBLIC_PARAMETERS];
-static pp_evloop_t myloop;
 static std::map<std::string, public_parameter_t *> nameToPP;
 ESP_EVENT_DEFINE_BASE(PP_EVENTS);
 static int32_t event_id_counter = ID_COUNTER_START;
@@ -124,7 +123,7 @@ static pp_t pp_create(const char *name, pp_evloop_t *evloop, parameter_type_t ty
     p->state.write_id = event_id_counter++;
     p->conf.type = type;
     p->state.valueptr = valueptr;
-    p->conf.tojson = NULL;
+    //p->conf.tojson = NULL;
     if (event_write_cb)
         pp_event_handler_register(evloop, p->state.write_id, event_write_cb, p);
     return p;
@@ -237,18 +236,18 @@ pp_t pp_create_bool(const char *name, pp_evloop_t *evloop, esp_event_handler_t e
 {
     return pp_create(name, evloop, TYPE_BOOL, event_write_cb, valueptr);
 }
-pp_t pp_create_string(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, tojson_cb_t tojson)
+pp_t pp_create_string(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb/*, tojson_cb_t tojson*/)
 {
     pp_t pp = pp_create(name, evloop, TYPE_STRING, event_write_cb, 0);
-    public_parameter_t *p = (public_parameter_t *)pp;
-    p->conf.tojson = tojson;
+//    public_parameter_t *p = (public_parameter_t *)pp;
+    //p->conf.tojson = tojson;
     return pp;
 }
-pp_t pp_create_binary(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, tojson_cb_t tojson)
+pp_t pp_create_binary(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb/*, tojson_cb_t tojson*/)
 {
     pp_t pp = pp_create(name, evloop, TYPE_BINARY, event_write_cb, NULL);
-    public_parameter_t *p = (public_parameter_t *)pp;
-    p->conf.tojson = tojson;
+//    public_parameter_t *p = (public_parameter_t *)pp;
+    //p->conf.tojson = tojson;
     return pp;
 }
 
@@ -397,11 +396,11 @@ parameter_type_t pp_get_type(pp_t pp)
     return p->conf.type;
 }
 
-tojson_cb_t pp_get_tojson(pp_t pp)
-{
-    public_parameter_t *p = (public_parameter_t *)pp;
-    return p->conf.tojson;
-}
+// tojson_cb_t pp_get_tojson(pp_t pp)
+// {
+//     public_parameter_t *p = (public_parameter_t *)pp;
+//     return p->conf.tojson;
+// }
 
 pp_evloop_t *pp_get_owner(pp_t pp)
 {
@@ -420,9 +419,4 @@ pp_t pp_get_par(int index)
    if (index >= MAX_PUBLIC_PARAMETERS)
         return NULL;
     return (pp_t) &par_list[index];
-}
-
-void pp_init(unsigned task_priority)
-{
-
 }

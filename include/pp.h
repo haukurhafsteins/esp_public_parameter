@@ -56,12 +56,10 @@ extern "C"
         esp_event_base_t base;
     } pp_evloop_t;
 
-    typedef size_t (*tojson_cb_t)(void *binary, char *json, size_t json_size);
+    //typedef size_t (*tojson_cb_t)(void *binary, char *json, size_t json_size);
 
     typedef void *pp_t;
     typedef void *pp_event_t;
-
-    void pp_init(unsigned task_priority);
 
     pp_t pp_get(const char *name);
     float pp_get_float_value(pp_t pp);
@@ -69,7 +67,7 @@ extern "C"
     pp_unit_t pp_get_unit(pp_t pp);
     parameter_type_t pp_get_type(pp_t pp);
     const char *pp_get_name(pp_t pp);
-    tojson_cb_t pp_get_tojson(pp_t pp);
+    //tojson_cb_t pp_get_tojson(pp_t pp);
     void *pp_get_valueptr(pp_t pp);
     pp_t pp_get_par(int index);
     pp_evloop_t *pp_get_owner(pp_t pp);
@@ -82,8 +80,8 @@ extern "C"
     pp_t pp_create_float(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, float *valueptr);
     pp_t pp_create_float_array(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb);
     pp_t pp_create_bool(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, bool *valueptr);
-    pp_t pp_create_binary(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, tojson_cb_t tojson);
-    pp_t pp_create_string(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, tojson_cb_t tojson);
+    pp_t pp_create_binary(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb/*, tojson_cb_t tojson*/);
+    pp_t pp_create_string(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb/*, tojson_cb_t tojson*/);
 
     bool pp_delete(pp_t pp);
 
