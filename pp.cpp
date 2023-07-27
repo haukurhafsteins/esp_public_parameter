@@ -22,7 +22,7 @@ typedef struct
         const char *name;
         pp_unit_t unit;
         pp_evloop_t *owner;
-        //tojson_cb_t tojson;
+        pp_read_cb_t read_cb;
         parameter_type_t type;
         char *format_str;
     } conf;
@@ -420,3 +420,19 @@ pp_t pp_get_par(int index)
         return NULL;
     return (pp_t) &par_list[index];
 }
+
+bool pp_set_read_cb(pp_t pp, pp_read_cb_t read_cb)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+    p->conf.read_cb = read_cb;
+    return true;
+}
+
+bool pp_read_binary(pp_t pp, void *buf, size_t *bufsize)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+    if (p->conf.read_cb == NULL)
+        return false;
+    return p->conf.read_cb(p, buf, bufsize);
+}
+

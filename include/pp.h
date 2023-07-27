@@ -56,10 +56,10 @@ extern "C"
         esp_event_base_t base;
     } pp_evloop_t;
 
-    //typedef size_t (*tojson_cb_t)(void *binary, char *json, size_t json_size);
-
     typedef void *pp_t;
     typedef void *pp_event_t;
+
+    typedef bool (*pp_read_cb_t)(pp_t pp, void* buf, size_t *bufsize);
 
     pp_t pp_get(const char *name);
     float pp_get_float_value(pp_t pp);
@@ -67,7 +67,6 @@ extern "C"
     pp_unit_t pp_get_unit(pp_t pp);
     parameter_type_t pp_get_type(pp_t pp);
     const char *pp_get_name(pp_t pp);
-    //tojson_cb_t pp_get_tojson(pp_t pp);
     void *pp_get_valueptr(pp_t pp);
     pp_t pp_get_par(int index);
     pp_evloop_t *pp_get_owner(pp_t pp);
@@ -93,6 +92,8 @@ extern "C"
     bool pp_post_write_bool(pp_t pp, bool value);
     bool pp_post_write_string(pp_t pp, const char *str);
 
+    bool pp_read_binary(pp_t pp, void *buf, size_t *bufsize);
+
     pp_event_t pp_event_add(pp_evloop_t *evloop, int id, int ms, bool periodic, void *data, size_t data_size);
     void pp_event_handler_register(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void *p);
     void pp_event_handler_unregister(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb);
@@ -108,6 +109,7 @@ extern "C"
     const char *pp_unit_to_str(pp_unit_t unit);
     pp_unit_t pp_string_to_unit(const char *str);
 
+    bool pp_set_read_cb(pp_t pp, pp_read_cb_t cb);
     bool pp_set_unit(pp_t pp, pp_unit_t unit);
     bool pp_evloop_post(pp_evloop_t *evloop, int32_t id, void *data, size_t data_size);
 
