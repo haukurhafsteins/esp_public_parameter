@@ -95,12 +95,12 @@ extern "C"
     bool pp_read_binary(pp_t pp, void *buf, size_t *bufsize);
 
     pp_event_t pp_event_add(pp_evloop_t *evloop, int id, int ms, bool periodic, void *data, size_t data_size);
-    void pp_event_handler_register(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void *p);
-    void pp_event_handler_unregister(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb);
+    bool pp_event_handler_register(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void *p);
+    bool pp_event_handler_unregister(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb);
     void pp_event_remove(pp_event_t ev);
 
-    pp_t pp_subscribe(pp_t pp, pp_evloop_t *receiver, esp_event_handler_t event_cb);
-    pp_t pp_unsubscribe(pp_t pp, pp_evloop_t *receiver, esp_event_handler_t event_cb);
+    bool pp_subscribe(pp_t pp, pp_evloop_t *receiver, esp_event_handler_t event_cb);
+    bool pp_unsubscribe(pp_t pp, pp_evloop_t *receiver, esp_event_handler_t event_cb);
 
     bool pp_print_parameter(int index, char *buf, size_t bufsize);
 

@@ -132,20 +132,36 @@ static pp_t pp_create(const char *name, pp_evloop_t *evloop, parameter_type_t ty
 //-----------------------------------------------------------------------
 // Public stuff
 //-----------------------------------------------------------------------
-void pp_event_handler_register(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void* p)
+bool pp_event_handler_register(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void* p)
 {
+    esp_err_t err;
     if (evloop->loop_handle == NULL)
-        ESP_ERROR_CHECK(esp_event_handler_register(evloop->base, id, cb, p));
+    {
+        err = esp_event_handler_register(evloop->base, id, cb, p);
+        ESP_ERROR_CHECK(err);
+    }
     else
-        ESP_ERROR_CHECK(esp_event_handler_instance_register_with(evloop->loop_handle, evloop->base, id, cb, p, NULL));
+    {
+        err = esp_event_handler_instance_register_with(evloop->loop_handle, evloop->base, id, cb, p, NULL);
+        ESP_ERROR_CHECK(err);
+    }
+    return err == ESP_OK;
 }
 
-void pp_event_handler_unregister(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb)
+bool pp_event_handler_unregister(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb)
 {
+    esp_err_t err;
     if (evloop->loop_handle == NULL)
-        ESP_ERROR_CHECK(esp_event_handler_unregister(evloop->base, id, cb));
+    {
+        err = esp_event_handler_unregister(evloop->base, id, cb);
+        ESP_ERROR_CHECK(err);
+    }
     else
-        ESP_ERROR_CHECK(esp_event_handler_unregister_with(evloop->loop_handle, evloop->base, id, cb));
+    {
+        err = esp_event_handler_unregister_with(evloop->loop_handle, evloop->base, id, cb);
+        ESP_ERROR_CHECK(err);
+    }
+    return err == ESP_OK;
 }
 
 bool pp_evloop_post(pp_evloop_t *evloop, int32_t id, void *data, size_t data_size)
@@ -261,31 +277,36 @@ pp_t pp_get(const char *name)
     return NULL;
 }
 
-pp_t pp_subscribe(pp_t pp, pp_evloop_t *evloop, esp_event_handler_t event_cb)
+bool pp_subscribe(pp_t pp, pp_evloop_t *evloop, esp_event_handler_t event_cb)
 {
     if (pp == NULL)
     {
         ESP_LOGW(TAG, "%s: parameter is NULL", __func__);
-        return NULL;
+        return false;
     }
     public_parameter_t *p = (public_parameter_t *)pp;
     if (p->conf.type == TYPE_EXECUTE)
     {
         ESP_LOGW(TAG, "%s: No subscription for execute", __func__);
-        return NULL;
+        return false;
     }
-    pp_event_handler_register(evloop, p->state.newstate_id, event_cb, p);
-    p->state.subscription_list[evloop->loop_handle] = *evloop;
-    return pp;
+    if (pp_event_handler_register(evloop, p->state.newstate_id, event_cb, p))
+    {
+        p->state.subscription_list[evloop->loop_handle] = *evloop;
+        return true;
+    }
+    return false;
 }
-pp_t pp_unsubscribe(pp_t pp, pp_evloop_t *evloop, esp_event_handler_t event_cb)
+bool pp_unsubscribe(pp_t pp, pp_evloop_t *evloop, esp_event_handler_t event_cb)
 {
     if (pp == NULL)
-        return NULL;
+    {
+        ESP_LOGW(TAG, "%s: parameter is NULL", __func__);
+        return false;
+    }
 
     public_parameter_t *p = (public_parameter_t *)pp;
-    pp_event_handler_unregister(evloop, p->state.newstate_id, event_cb);
-    return pp;
+    return pp_event_handler_unregister(evloop, p->state.newstate_id, event_cb);
 }
 bool pp_post_write_bool(pp_t pp, bool value)
 {
