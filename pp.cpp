@@ -12,7 +12,7 @@
 #define MAX_PUBLIC_PARAMETERS 50
 #define MAX_STR 128
 #define ID_COUNTER_START 1000
-#define POST_WAIT_MS 20
+#define POST_WAIT_MS 0
 
 typedef struct
 {
@@ -171,7 +171,7 @@ bool pp_evloop_post(pp_evloop_t *evloop, int32_t id, void *data, size_t data_siz
         esp_err_t err = esp_event_post(evloop->base, id, data, data_size, pdMS_TO_TICKS(POST_WAIT_MS));
         if (ESP_OK != err)
         {
-            ESP_LOGE(TAG, "%s: esp_event_post, Receiver is %s - %s", __func__, evloop->base, esp_err_to_name(err));
+            //ESP_LOGE(TAG, "%s: esp_event_post, Receiver is %s - %s", __func__, evloop->base, esp_err_to_name(err));
             return false;
         }
     }
@@ -180,7 +180,7 @@ bool pp_evloop_post(pp_evloop_t *evloop, int32_t id, void *data, size_t data_siz
         esp_err_t err = esp_event_post_to(evloop->loop_handle, evloop->base, id, data, data_size, pdMS_TO_TICKS(POST_WAIT_MS));
         if (ESP_OK != err)
         {
-            ESP_LOGE(TAG, "%s: esp_event_post_to, Receiver is %s - %s", __func__, evloop->base, esp_err_to_name(err));
+            //ESP_LOGE(TAG, "%s: esp_event_post_to, Receiver is %s - %s", __func__, evloop->base, esp_err_to_name(err));
             return false;
         }
     }
