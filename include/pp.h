@@ -56,6 +56,15 @@ extern "C"
         esp_event_base_t base;
     } pp_evloop_t;
 
+    typedef struct pp_info_t {
+        const char* name;
+        parameter_type_t type;
+        pp_evloop_t *owner;
+        pp_unit_t unit;
+        void* valueptr;
+        size_t subscriptions;
+    } pp_info_t;
+
     typedef void *pp_t;
     typedef void *pp_event_t;
 
@@ -76,6 +85,7 @@ extern "C"
     void pp_reset_float_array(pp_float_array_t *array);
     void pp_reset_int16_array(pp_int16_array_t *array);
 
+    pp_t pp_create_int32(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, int32_t *valueptr);
     pp_t pp_create_float(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, float *valueptr);
     pp_t pp_create_float_array(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb);
     pp_t pp_create_bool(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, bool *valueptr);
@@ -84,17 +94,20 @@ extern "C"
 
     bool pp_delete(pp_t pp);
 
+    bool pp_post_newstate_int32(pp_t pp, int32_t i);
+    bool pp_post_newstate_bool(pp_t pp, bool b);
     bool pp_post_newstate_float(pp_t pp, float f);
     bool pp_post_newstate_float_array(pp_t pp, pp_float_array_t *array);
     bool pp_post_newstate_binary(pp_t pp, void *bin, size_t size);
 
+    bool pp_post_write_int32(pp_t pp, int32_t value);
     bool pp_post_write_float(pp_t pp, float value);
     bool pp_post_write_bool(pp_t pp, bool value);
     bool pp_post_write_string(pp_t pp, const char *str);
 
     bool pp_read_binary(pp_t pp, void *buf, size_t *bufsize);
 
-    pp_event_t pp_event_add(pp_evloop_t *evloop, int id, int ms, bool periodic, void *data, size_t data_size);
+    //pp_event_t pp_event_add(pp_evloop_t *evloop, int id, int ms, bool periodic, void *data, size_t data_size);
     bool pp_event_handler_register(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void *p);
     bool pp_event_handler_unregister(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb);
     void pp_event_remove(pp_event_t ev);
@@ -102,9 +115,7 @@ extern "C"
     bool pp_subscribe(pp_t pp, pp_evloop_t *receiver, esp_event_handler_t event_cb);
     bool pp_unsubscribe(pp_t pp, pp_evloop_t *receiver, esp_event_handler_t event_cb);
 
-    bool pp_print_parameter(int index, char *buf, size_t bufsize);
-
-    int pp_vprintf(const char *format, va_list arg);
+    int pp_get_info(int index, pp_info_t *info);
 
     const char *pp_unit_to_str(pp_unit_t unit);
     pp_unit_t pp_string_to_unit(const char *str);

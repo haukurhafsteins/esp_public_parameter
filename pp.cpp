@@ -222,6 +222,10 @@ pp_unit_t pp_string_to_unit(const char *str)
     return UNIT_NONE;
 }
 
+pp_t pp_create_int32(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, int32_t *valueptr)
+{
+    return pp_create(name, evloop, TYPE_INT32, event_write_cb, valueptr);
+}
 pp_t pp_create_float(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, float *valueptr)
 {
     return pp_create(name, evloop, TYPE_FLOAT, event_write_cb, valueptr);
@@ -315,6 +319,13 @@ bool pp_post_write_bool(pp_t pp, bool value)
         return false;
     return pp_evloop_post(p->conf.owner, p->state.write_id, (void *)&value, sizeof(bool));
 }
+bool pp_post_write_int32(pp_t pp, int32_t value)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+    if (p == NULL || p->conf.owner == NULL)
+        return false;
+    return pp_evloop_post(p->conf.owner, p->state.write_id, (void *)&value, sizeof(int32_t));
+}
 bool pp_post_write_float(pp_t pp, float value)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
@@ -335,6 +346,24 @@ bool pp_post_newstate_binary(pp_t pp, void *bin, size_t size)
     public_parameter_t *p = (public_parameter_t *)pp;
 
     pp_newstate(p, (void *)bin, size);
+    return true;
+}
+
+bool pp_post_newstate_int32(pp_t pp, int32_t i)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+
+    if (p->state.subscription_list.size() > 0)
+        pp_newstate(p, &i, sizeof(int32_t));
+    return true;
+}
+
+bool pp_post_newstate_bool(pp_t pp, bool b)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+
+    if (p->state.subscription_list.size() > 0)
+        pp_newstate(p, &b, sizeof(bool));
     return true;
 }
 
@@ -455,5 +484,23 @@ bool pp_read_binary(pp_t pp, void *buf, size_t *bufsize)
     if (p->conf.read_cb == NULL)
         return false;
     return p->conf.read_cb(p, buf, bufsize);
+}
+
+int pp_get_info(int index, pp_info_t *info)
+{
+    while (index < MAX_PUBLIC_PARAMETERS)
+    {
+        if (par_list[index].conf.name != NULL)
+        {
+            info->name = par_list[index].conf.name;
+            info->type = par_list[index].conf.type;
+            info->unit = par_list[index].conf.unit;
+            info->owner = par_list[index].conf.owner;
+            info->subscriptions = par_list[index].state.subscription_list.size();
+            info->valueptr = par_list[index].state.valueptr;
+            return index++;
+        }
+    }
+    return -1;
 }
 
