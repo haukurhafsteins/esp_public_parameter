@@ -500,6 +500,7 @@ int pp_get_info(int index, pp_info_t *info)
             info->valueptr = par_list[index].state.valueptr;
             return index++;
         }
+        index++;
     }
     return -1;
 }
