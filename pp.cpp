@@ -41,7 +41,6 @@ typedef struct
 static const char *unit_str[] = {"", "V", "A", "Wh", "lpm", "Kg", "%", "g"};
 static public_parameter_t par_list[MAX_PUBLIC_PARAMETERS];
 static std::map<std::string, public_parameter_t *> nameToPP;
-ESP_EVENT_DEFINE_BASE(PP_EVENTS);
 static int32_t event_id_counter = ID_COUNTER_START;
 
 static const char *TAG = "PP";
