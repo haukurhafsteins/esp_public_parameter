@@ -31,7 +31,6 @@ typedef struct
     struct
     {
         std::map<esp_event_loop_handle_t, pp_evloop_t> subscription_list;
-        uint64_t change_counter;
         int32_t newstate_id;
         int32_t write_id;
         void *valueptr;
@@ -48,22 +47,21 @@ static const char *TAG = "PP";
 
 static bool pp_newstate(public_parameter_t *p, void *data, size_t data_size)
 {
-    if (p == NULL)
-    {
-        ESP_LOGE(TAG, "%s: Parameter pointer is NULL", __func__);
-        return false;
-    }
-    if (data == NULL)
-    {
-        ESP_LOGE(TAG, "%s: Data pointer is NULL", __func__);
-        return false;
-    }
-    if (data_size == 0)
-    {
-        ESP_LOGE(TAG, "%s: Data size is NULL", __func__);
-        return false;
-    }
-    p->state.change_counter++;
+    // if (p == NULL)
+    // {
+    //     ESP_LOGE(TAG, "%s: Parameter pointer is NULL", __func__);
+    //     return false;
+    // }
+    // if (data == NULL)
+    // {
+    //     ESP_LOGE(TAG, "%s: Data pointer is NULL", __func__);
+    //     return false;
+    // }
+    // if (data_size == 0)
+    // {
+    //     ESP_LOGE(TAG, "%s: Data size is NULL", __func__);
+    //     return false;
+    // }
     int size = p->state.subscription_list.size();
     if (size > 0)
     {
@@ -117,13 +115,11 @@ static pp_t pp_create(const char *name, pp_evloop_t *evloop, parameter_type_t ty
 
     p->conf.name = name;
     p->conf.owner = evloop;
-    p->state.change_counter = 0;
     p->state.newstate_id = event_id_counter++;
     p->state.write_id = event_id_counter++;
     p->conf.type = type;
     p->state.valueptr = valueptr;
-    //p->conf.tojson = NULL;
-    if (event_write_cb)
+    if (event_write_cb && evloop)
         pp_event_handler_register(evloop, p->state.write_id, event_write_cb, p);
     return p;
 }
@@ -355,6 +351,23 @@ bool pp_post_newstate_int32(pp_t pp, int32_t i)
     if (p->state.subscription_list.size() > 0)
         pp_newstate(p, &i, sizeof(int32_t));
     return true;
+}
+
+bool pp_post_newstate_int32_irq(pp_t pp, int32_t i)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+
+    int size = p->state.subscription_list.size();
+    if (size > 0)
+    {
+        for (auto itc = p->state.subscription_list.begin(); itc != p->state.subscription_list.end(); itc++)
+        {
+            if (ESP_OK == esp_event_isr_post_to(itc->second.loop_handle, itc->second.base, p->state.newstate_id, &i, sizeof(int32_t), NULL))
+                size--;
+        }
+        return (size == 0); // all sends successful
+    }
+    return false;
 }
 
 bool pp_post_newstate_bool(pp_t pp, bool b)

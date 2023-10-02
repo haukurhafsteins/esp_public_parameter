@@ -95,6 +95,7 @@ extern "C"
     bool pp_delete(pp_t pp);
 
     bool pp_post_newstate_int32(pp_t pp, int32_t i);
+    bool pp_post_newstate_int32_irq(pp_t pp, int32_t i);
     bool pp_post_newstate_bool(pp_t pp, bool b);
     bool pp_post_newstate_float(pp_t pp, float f);
     bool pp_post_newstate_float_array(pp_t pp, pp_float_array_t *array);
