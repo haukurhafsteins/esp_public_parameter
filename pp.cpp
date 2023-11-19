@@ -33,6 +33,8 @@ typedef struct
         std::map<esp_event_loop_handle_t, pp_evloop_t> subscription_list;
         int32_t newstate_id;
         int32_t write_id;
+        /// @brief True if the parameter is active, false if it is inactive.
+        bool is_active;
         void *valueptr;
     } state;
 } public_parameter_t;
@@ -393,8 +395,8 @@ bool pp_post_newstate_float_array(pp_t pp, pp_float_array_t *fsrc)
     public_parameter_t *p = (public_parameter_t *)pp;
 
     if (p->state.subscription_list.size() > 0)
-        pp_newstate(p, (void *)fsrc, pp_get_float_array_size(fsrc->len));
-    return true;
+        return pp_newstate(p, (void *)fsrc, pp_get_float_array_size(fsrc->len));
+    return false;
 }
 
 void pp_reset_float_array(pp_float_array_t *array)
@@ -407,6 +409,11 @@ void pp_reset_int16_array(pp_int16_array_t *array)
     memset(array->data, 0, sizeof(int16_t) * array->len);
 }
 
+/// @brief Allocate memory for a float array.
+/// The array is allocated with calloc, so all values are initialized to 0.
+/// To free the array, use free().
+/// @param len Number of elements in the array
+/// @return A pointer to the allocated array, or NULL if allocation failed.
 pp_float_array_t *pp_allocate_float_array(size_t len)
 {
     pp_float_array_t *p = (pp_float_array_t *)calloc(1, pp_get_float_array_size(len));
@@ -515,5 +522,17 @@ int pp_get_info(int index, pp_info_t *info)
         index++;
     }
     return -1;
+}
+
+void pp_enable(pp_t pp, bool enable)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+    p->state.is_active = enable;
+}
+
+bool pp_is_enabled(pp_t pp)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+    return p->state.is_active;
 }
 

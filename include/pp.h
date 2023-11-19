@@ -81,6 +81,9 @@ extern "C"
     pp_evloop_t *pp_get_owner(pp_t pp);
     int pp_get_subscriptions(pp_t pp);
 
+    void pp_enable(pp_t pp, bool enable);
+    bool pp_is_enabled(pp_t pp);
+
     pp_float_array_t *pp_allocate_float_array(size_t len);
     void pp_reset_float_array(pp_float_array_t *array);
     void pp_reset_int16_array(pp_int16_array_t *array);
