@@ -121,6 +121,7 @@ static pp_t pp_create(const char *name, pp_evloop_t *evloop, parameter_type_t ty
     p->state.write_id = event_id_counter++;
     p->conf.type = type;
     p->state.valueptr = valueptr;
+    p->state.is_active = true;
     if (event_write_cb && evloop)
         pp_event_handler_register(evloop, p->state.write_id, event_write_cb, p);
     return p;
