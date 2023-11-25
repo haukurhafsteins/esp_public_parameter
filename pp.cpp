@@ -396,7 +396,7 @@ bool pp_post_newstate_float_array(pp_t pp, pp_float_array_t *fsrc)
     public_parameter_t *p = (public_parameter_t *)pp;
 
     if (p->state.subscription_list.size() > 0)
-        return pp_newstate(p, (void *)fsrc, pp_get_float_array_size(fsrc->len));
+        return pp_newstate(p, (void *)fsrc, pp_get_float_array_byte_size(fsrc->len));
     return false;
 }
 
@@ -417,7 +417,7 @@ void pp_reset_int16_array(pp_int16_array_t *array)
 /// @return A pointer to the allocated array, or NULL if allocation failed.
 pp_float_array_t *pp_allocate_float_array(size_t len)
 {
-    pp_float_array_t *p = (pp_float_array_t *)calloc(1, pp_get_float_array_size(len));
+    pp_float_array_t *p = (pp_float_array_t *)calloc(1, pp_get_float_array_byte_size(len));
     if (p == 0)
     {
         ESP_LOGE(TAG, "Failed to allocate %d bytes", len);
@@ -431,7 +431,7 @@ pp_float_array_t *pp_allocate_float_array(size_t len)
 // pp_float_array_t *pp_allocate_float_array_with_hdr(char* hdr, size_t len)
 // {
 //     size_t hdr_size = strlen(hdr);
-//     uint8_t *p = (uint8_t *)calloc(1, hdr_size + pp_get_float_array_size(len));
+//     uint8_t *p = (uint8_t *)calloc(1, hdr_size + pp_get_float_array_byte_size(len));
 //     if (p == 0)
 //     {
 //         ESP_LOGE(TAG, "Failed to allocate %d bytes", len);
@@ -443,7 +443,7 @@ pp_float_array_t *pp_allocate_float_array(size_t len)
 //     return fhdr;
 // }
 
-size_t pp_get_float_array_size(size_t len)
+size_t pp_get_float_array_byte_size(size_t len)
 {
     return sizeof(pp_float_array_t) + sizeof(float) * len;
 }

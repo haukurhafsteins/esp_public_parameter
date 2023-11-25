@@ -72,7 +72,7 @@ extern "C"
 
     pp_t pp_get(const char *name);
     float pp_get_float_value(pp_t pp);
-    size_t pp_get_float_array_size(size_t len);
+    size_t pp_get_float_array_byte_size(size_t len);
     pp_unit_t pp_get_unit(pp_t pp);
     parameter_type_t pp_get_type(pp_t pp);
     const char *pp_get_name(pp_t pp);
