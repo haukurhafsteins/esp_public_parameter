@@ -22,7 +22,7 @@ typedef struct
         const char *name;
         pp_unit_t unit;
         pp_evloop_t *owner;
-        pp_read_cb_t read_cb;
+        pp_json_cb_t json_cb;
         parameter_type_t type;
         char *format_str;
     } conf;
@@ -35,7 +35,7 @@ typedef struct
         int32_t write_id;
         /// @brief True if the parameter is active, false if it is inactive.
         bool is_active;
-        void *valueptr;
+        const void *valueptr;
     } state;
 } public_parameter_t;
 
@@ -77,7 +77,7 @@ static bool pp_newstate(public_parameter_t *p, void *data, size_t data_size)
     return false;
 }
 
-static pp_t pp_create(const char *name, pp_evloop_t *evloop, parameter_type_t type, esp_event_handler_t event_write_cb, void *valueptr)
+static pp_t pp_create(const char *name, pp_evloop_t *evloop, parameter_type_t type, esp_event_handler_t event_write_cb, const void *valueptr)
 {
     if (name == NULL)
     {
@@ -117,14 +117,49 @@ static pp_t pp_create(const char *name, pp_evloop_t *evloop, parameter_type_t ty
 
     p->conf.name = name;
     p->conf.owner = evloop;
+    p->conf.type = type;
+    p->conf.unit = UNIT_NONE;
+    p->conf.json_cb = NULL;
     p->state.newstate_id = event_id_counter++;
     p->state.write_id = event_id_counter++;
-    p->conf.type = type;
     p->state.valueptr = valueptr;
     p->state.is_active = true;
+    
     if (event_write_cb && evloop)
         pp_event_handler_register(evloop, p->state.write_id, event_write_cb, p);
     return p;
+}
+
+static bool pp_json_int32(pp_t pp, char *buf, size_t *bufsize)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+    int32_t value = *((int32_t *)p->state.valueptr);
+    *bufsize = snprintf(buf, *bufsize, "%li", value);
+    return true;
+}
+
+static bool pp_json_float(pp_t pp, char *buf, size_t *bufsize)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+    float value = *((float *)p->state.valueptr);
+    *bufsize = snprintf(buf, *bufsize, "%f", value);
+    return true;
+}
+
+static bool pp_json_bool(pp_t pp, char *buf, size_t *bufsize)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+    bool value = *((bool *)p->state.valueptr);
+    *bufsize = snprintf(buf, *bufsize, "%s", value ? "true" : "false");
+    return true;
+}
+
+static bool pp_json_string(pp_t pp, char *buf, size_t *bufsize)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+    const char *value = (const char *)p->state.valueptr;
+    *bufsize = snprintf(buf, *bufsize, "%s", value);
+    return true;
 }
 
 //-----------------------------------------------------------------------
@@ -220,13 +255,19 @@ pp_unit_t pp_string_to_unit(const char *str)
     return UNIT_NONE;
 }
 
-pp_t pp_create_int32(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, int32_t *valueptr)
+pp_t pp_create_int32(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, const int32_t *valueptr)
 {
-    return pp_create(name, evloop, TYPE_INT32, event_write_cb, valueptr);
+    pp_t ret = pp_create(name, evloop, TYPE_INT32, event_write_cb, valueptr);
+    // if (ret != NULL)
+    //     pp_set_json_cb(ret, pp_json_int32);
+    return ret;
 }
 pp_t pp_create_float(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, float *valueptr)
 {
-    return pp_create(name, evloop, TYPE_FLOAT, event_write_cb, valueptr);
+    pp_t ret = pp_create(name, evloop, TYPE_FLOAT, event_write_cb, valueptr);
+    // if (ret != NULL)
+    //     pp_set_json_cb(ret, pp_json_float);
+    return ret;
 }
 bool pp_delete(pp_t pp)
 {
@@ -252,20 +293,19 @@ pp_t pp_create_float_array(const char *name, pp_evloop_t *evloop, esp_event_hand
 }
 pp_t pp_create_bool(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, bool *valueptr)
 {
-    return pp_create(name, evloop, TYPE_BOOL, event_write_cb, valueptr);
+    pp_t ret = pp_create(name, evloop, TYPE_BOOL, event_write_cb, valueptr);
+    // if (ret != NULL)
+    //     pp_set_json_cb(ret, pp_json_bool);
+    return ret;
 }
 pp_t pp_create_string(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb/*, tojson_cb_t tojson*/)
 {
     pp_t pp = pp_create(name, evloop, TYPE_STRING, event_write_cb, 0);
-//    public_parameter_t *p = (public_parameter_t *)pp;
-    //p->conf.tojson = tojson;
     return pp;
 }
 pp_t pp_create_binary(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb/*, tojson_cb_t tojson*/)
 {
     pp_t pp = pp_create(name, evloop, TYPE_BINARY, event_write_cb, NULL);
-//    public_parameter_t *p = (public_parameter_t *)pp;
-    //p->conf.tojson = tojson;
     return pp;
 }
 
@@ -448,7 +488,7 @@ size_t pp_get_float_array_byte_size(size_t len)
     return sizeof(pp_float_array_t) + sizeof(float) * len;
 }
 
-void* pp_get_valueptr(pp_t pp)
+const void* pp_get_valueptr(pp_t pp)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
     return p->state.valueptr;
@@ -491,19 +531,19 @@ pp_t pp_get_par(int index)
     return (pp_t) &par_list[index];
 }
 
-bool pp_set_read_cb(pp_t pp, pp_read_cb_t read_cb)
+bool pp_set_json_cb(pp_t pp, pp_json_cb_t json_cb)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
-    p->conf.read_cb = read_cb;
+    p->conf.json_cb = json_cb;
     return true;
 }
 
-bool pp_read_binary(pp_t pp, void *buf, size_t *bufsize)
+bool pp_get_as_json(pp_t pp, char *buf, size_t *bufsize)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
-    if (p->conf.read_cb == NULL)
+    if (p->conf.json_cb == NULL)
         return false;
-    return p->conf.read_cb(p, buf, bufsize);
+    return p->conf.json_cb(p, buf, bufsize);
 }
 
 int pp_get_info(int index, pp_info_t *info)

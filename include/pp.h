@@ -61,14 +61,14 @@ extern "C"
         parameter_type_t type;
         pp_evloop_t *owner;
         pp_unit_t unit;
-        void* valueptr;
+        const void* valueptr;
         size_t subscriptions;
     } pp_info_t;
 
     typedef void *pp_t;
     typedef void *pp_event_t;
 
-    typedef bool (*pp_read_cb_t)(pp_t pp, void* buf, size_t *bufsize);
+    typedef bool (*pp_json_cb_t)(pp_t pp, char* buf, size_t *bufsize);
 
     pp_t pp_get(const char *name);
     float pp_get_float_value(pp_t pp);
@@ -76,7 +76,7 @@ extern "C"
     pp_unit_t pp_get_unit(pp_t pp);
     parameter_type_t pp_get_type(pp_t pp);
     const char *pp_get_name(pp_t pp);
-    void *pp_get_valueptr(pp_t pp);
+    const void *pp_get_valueptr(pp_t pp);
     pp_t pp_get_par(int index);
     pp_evloop_t *pp_get_owner(pp_t pp);
     int pp_get_subscriptions(pp_t pp);
@@ -88,7 +88,7 @@ extern "C"
     void pp_reset_float_array(pp_float_array_t *array);
     void pp_reset_int16_array(pp_int16_array_t *array);
 
-    pp_t pp_create_int32(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, int32_t *valueptr);
+    pp_t pp_create_int32(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, const int32_t *valueptr);
     pp_t pp_create_float(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, float *valueptr);
     pp_t pp_create_float_array(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb);
     pp_t pp_create_bool(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, bool *valueptr);
@@ -109,7 +109,7 @@ extern "C"
     bool pp_post_write_bool(pp_t pp, bool value);
     bool pp_post_write_string(pp_t pp, const char *str);
 
-    bool pp_read_binary(pp_t pp, void *buf, size_t *bufsize);
+    bool pp_get_as_json(pp_t pp, char *buf, size_t *bufsize);
 
     //pp_event_t pp_event_add(pp_evloop_t *evloop, int id, int ms, bool periodic, void *data, size_t data_size);
     bool pp_event_handler_register(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void *p);
@@ -124,7 +124,7 @@ extern "C"
     const char *pp_unit_to_str(pp_unit_t unit);
     pp_unit_t pp_string_to_unit(const char *str);
 
-    bool pp_set_read_cb(pp_t pp, pp_read_cb_t cb);
+    bool pp_set_json_cb(pp_t pp, pp_json_cb_t cb);
     bool pp_set_unit(pp_t pp, pp_unit_t unit);
     bool pp_evloop_post(pp_evloop_t *evloop, int32_t id, void *data, size_t data_size);
 
