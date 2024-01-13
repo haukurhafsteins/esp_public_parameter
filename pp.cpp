@@ -12,7 +12,7 @@
 #define MAX_PUBLIC_PARAMETERS 50
 #define MAX_STR 128
 #define ID_COUNTER_START 1000
-#define POST_WAIT_MS 0
+#define POST_WAIT_MS 10
 
 typedef struct
 {
@@ -49,21 +49,21 @@ static const char *TAG = "PP";
 
 static bool pp_newstate(public_parameter_t *p, void *data, size_t data_size)
 {
-    // if (p == NULL)
-    // {
-    //     ESP_LOGE(TAG, "%s: Parameter pointer is NULL", __func__);
-    //     return false;
-    // }
-    // if (data == NULL)
-    // {
-    //     ESP_LOGE(TAG, "%s: Data pointer is NULL", __func__);
-    //     return false;
-    // }
-    // if (data_size == 0)
-    // {
-    //     ESP_LOGE(TAG, "%s: Data size is NULL", __func__);
-    //     return false;
-    // }
+    if (p == NULL)
+    {
+        ESP_LOGE(TAG, "%s: Parameter pointer is NULL", __func__);
+        return false;
+    }
+    if (data == NULL)
+    {
+        ESP_LOGE(TAG, "%s: Data pointer is NULL", __func__);
+        return false;
+    }
+    if (data_size == 0)
+    {
+        ESP_LOGE(TAG, "%s: Data size is NULL", __func__);
+        return false;
+    }
     int size = p->state.subscription_list.size();
     if (size > 0)
     {
@@ -74,6 +74,7 @@ static bool pp_newstate(public_parameter_t *p, void *data, size_t data_size)
         }
         return (size == 0); // all sends successful
     }
+    ESP_LOGE(TAG, "%s: %d sends were unsuccessful", __func__, size);
     return false;
 }
 
