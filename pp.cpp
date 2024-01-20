@@ -51,17 +51,17 @@ static bool pp_newstate(public_parameter_t *p, void *data, size_t data_size)
     if (p == NULL)
     {
         ESP_LOGE(TAG, "%s: Parameter pointer is NULL", __func__);
-        return false;
+    return false;
     }
     if (data == NULL)
     {
         ESP_LOGE(TAG, "%s: Data pointer is NULL", __func__);
-        return false;
+    return false;
     }
     if (data_size == 0)
     {
         ESP_LOGE(TAG, "%s: Data size is NULL", __func__);
-        return false;
+    return false;
     }
     int size = p->state.subscription_list.size();
     if (size > 0)
@@ -73,7 +73,7 @@ static bool pp_newstate(public_parameter_t *p, void *data, size_t data_size)
         }
         return (size == 0); // all sends successful
     }
-    ESP_LOGE(TAG, "%s: %d sends were unsuccessful", __func__, size);
+ESP_LOGE(TAG, "%s: %d sends were unsuccessful", __func__, size);
     return false;
 }
 
@@ -278,7 +278,7 @@ pp_t pp_create_int32(const char *name, pp_evloop_t *evloop, esp_event_handler_t 
 pp_t pp_create_float(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, float *valueptr)
 {
     pp_t ret = pp_create(name, evloop, TYPE_FLOAT, event_write_cb, valueptr);
-    // if (ret != NULL)
+// if (ret != NULL)
     //     pp_set_json_cb(ret, pp_json_float);
     return ret;
 }
@@ -307,7 +307,7 @@ pp_t pp_create_float_array(const char *name, pp_evloop_t *evloop, esp_event_hand
 pp_t pp_create_bool(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, bool *valueptr)
 {
     pp_t ret = pp_create(name, evloop, TYPE_BOOL, event_write_cb, valueptr);
-    // if (ret != NULL)
+// if (ret != NULL)
     //     pp_set_json_cb(ret, pp_json_bool);
     return ret;
 }
