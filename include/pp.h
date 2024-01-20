@@ -68,7 +68,7 @@ extern "C"
     typedef void *pp_t;
     typedef void *pp_event_t;
 
-    typedef bool (*pp_json_cb_t)(pp_t pp, char* buf, size_t *bufsize);
+    typedef bool (*pp_json_cb_t)(pp_t pp, char* buf, size_t *bufsize, bool json);
 
     pp_t pp_get(const char *name);
     float pp_get_float_value(pp_t pp);
@@ -109,7 +109,7 @@ extern "C"
     bool pp_post_write_bool(pp_t pp, bool value);
     bool pp_post_write_string(pp_t pp, const char *str);
 
-    bool pp_get_as_json(pp_t pp, char *buf, size_t *bufsize);
+    bool pp_get_as_string(pp_t pp, char *buf, size_t *bufsize, bool json);
 
     //pp_event_t pp_event_add(pp_evloop_t *evloop, int id, int ms, bool periodic, void *data, size_t data_size);
     bool pp_event_handler_register(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void *p);
