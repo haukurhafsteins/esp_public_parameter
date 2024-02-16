@@ -51,30 +51,25 @@ static bool pp_newstate(public_parameter_t *p, void *data, size_t data_size)
     if (p == NULL)
     {
         ESP_LOGE(TAG, "%s: Parameter pointer is NULL", __func__);
-    return false;
+        return false;
     }
     if (data == NULL)
     {
         ESP_LOGE(TAG, "%s: Data pointer is NULL", __func__);
-    return false;
+        return false;
     }
     if (data_size == 0)
     {
         ESP_LOGE(TAG, "%s: Data size is NULL", __func__);
-    return false;
+        return false;
     }
     int size = p->state.subscription_list.size();
-    if (size > 0)
+    for (auto itc = p->state.subscription_list.begin(); itc != p->state.subscription_list.end(); itc++)
     {
-        for (auto itc = p->state.subscription_list.begin(); itc != p->state.subscription_list.end(); itc++)
-        {
-            if (pp_evloop_post(&itc->second, p->state.newstate_id, data, data_size))
-                size--;
-        }
-        return (size == 0); // all sends successful
+        if (pp_evloop_post(&itc->second, p->state.newstate_id, data, data_size))
+            size--;
     }
-ESP_LOGE(TAG, "%s: %d sends were unsuccessful", __func__, size);
-    return false;
+    return (size == 0); // all sends successful
 }
 
 static pp_t pp_create(const char *name, pp_evloop_t *evloop, parameter_type_t type, esp_event_handler_t event_write_cb, const void *valueptr)
@@ -217,7 +212,7 @@ bool pp_evloop_post(pp_evloop_t *evloop, int32_t id, void *data, size_t data_siz
         esp_err_t err = esp_event_post(evloop->base, id, data, data_size, pdMS_TO_TICKS(POST_WAIT_MS));
         if (ESP_OK != err)
         {
-            //ESP_LOGE(TAG, "%s: esp_event_post, Receiver is %s - %s", __func__, evloop->base, esp_err_to_name(err));
+            ESP_LOGE(TAG, "%s: esp_event_post, Receiver is %s - %s", __func__, evloop->base, esp_err_to_name(err));
             return false;
         }
     }
@@ -226,7 +221,7 @@ bool pp_evloop_post(pp_evloop_t *evloop, int32_t id, void *data, size_t data_siz
         esp_err_t err = esp_event_post_to(evloop->loop_handle, evloop->base, id, data, data_size, pdMS_TO_TICKS(POST_WAIT_MS));
         if (ESP_OK != err)
         {
-            //ESP_LOGE(TAG, "%s: esp_event_post_to, Receiver is %s - %s", __func__, evloop->base, esp_err_to_name(err));
+            ESP_LOGE(TAG, "%s: esp_event_post_to, Receiver is %s - %s", __func__, evloop->base, esp_err_to_name(err));
             return false;
         }
     }
@@ -278,7 +273,7 @@ pp_t pp_create_int32(const char *name, pp_evloop_t *evloop, esp_event_handler_t 
 pp_t pp_create_float(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, float *valueptr)
 {
     pp_t ret = pp_create(name, evloop, TYPE_FLOAT, event_write_cb, valueptr);
-// if (ret != NULL)
+    // if (ret != NULL)
     //     pp_set_json_cb(ret, pp_json_float);
     return ret;
 }
@@ -307,7 +302,7 @@ pp_t pp_create_float_array(const char *name, pp_evloop_t *evloop, esp_event_hand
 pp_t pp_create_bool(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, bool *valueptr)
 {
     pp_t ret = pp_create(name, evloop, TYPE_BOOL, event_write_cb, valueptr);
-// if (ret != NULL)
+    // if (ret != NULL)
     //     pp_set_json_cb(ret, pp_json_bool);
     return ret;
 }
@@ -396,7 +391,8 @@ bool pp_post_newstate_binary(pp_t pp, void *bin, size_t size)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
 
-    pp_newstate(p, (void *)bin, size);
+    if (p->state.subscription_list.size() > 0)
+        return pp_newstate(p, (void *)bin, size);
     return true;
 }
 
@@ -431,7 +427,7 @@ bool pp_post_newstate_bool(pp_t pp, bool b)
     public_parameter_t *p = (public_parameter_t *)pp;
 
     if (p->state.subscription_list.size() > 0)
-        pp_newstate(p, &b, sizeof(bool));
+        return pp_newstate(p, &b, sizeof(bool));
     return true;
 }
 
@@ -440,7 +436,7 @@ bool pp_post_newstate_float(pp_t pp, float f)
     public_parameter_t *p = (public_parameter_t *)pp;
 
     if (p->state.subscription_list.size() > 0)
-        pp_newstate(p, &f, sizeof(float));
+        return pp_newstate(p, &f, sizeof(float));
     return true;
 }
 
