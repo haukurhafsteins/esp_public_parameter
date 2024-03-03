@@ -103,6 +103,7 @@ extern "C"
     bool pp_post_newstate_float(pp_t pp, float f);
     bool pp_post_newstate_float_array(pp_t pp, pp_float_array_t *array);
     bool pp_post_newstate_binary(pp_t pp, void *bin, size_t size);
+    bool pp_post_newstate_string(pp_t pp, const char *str);
 
     bool pp_post_write_int32(pp_t pp, int32_t value);
     bool pp_post_write_float(pp_t pp, float value);

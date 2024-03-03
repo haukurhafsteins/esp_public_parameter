@@ -387,6 +387,15 @@ bool pp_post_write_string(pp_t pp, const char *str)
     return pp_evloop_post(p->conf.owner, p->state.write_id, (void *)str, strlen(str) + 1);
 }
 
+bool pp_post_newstate_string(pp_t pp, const char *str)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+
+    if (p->state.subscription_list.size() > 0)
+        return pp_newstate(p, (void *)str, strlen(str) + 1);
+    return false;
+}
+
 bool pp_post_newstate_binary(pp_t pp, void *bin, size_t size)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
