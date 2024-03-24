@@ -25,19 +25,6 @@ extern "C"
         TYPE_BINARY
     } parameter_type_t;
 
-    typedef enum
-    {
-        UNIT_NONE,       // ""
-        UNIT_V,          // "V"
-        UNIT_A,          // "A"
-        UNIT_Wh,         // "Wh"
-        UNIT_lpm,        // "lpm"
-        UNIT_Kg,         // "Kg"
-        UNIT_PERCENTAGE, // %
-        UNIT_G,          // g
-        UNIT_END
-    } pp_unit_t;
-
     typedef struct
     {
         size_t len;
@@ -60,7 +47,6 @@ extern "C"
         const char* name;
         parameter_type_t type;
         pp_evloop_t *owner;
-        pp_unit_t unit;
         const void* valueptr;
         size_t subscriptions;
     } pp_info_t;
@@ -73,7 +59,6 @@ extern "C"
     pp_t pp_get(const char *name);
     float pp_get_float_value(pp_t pp);
     size_t pp_get_float_array_byte_size(size_t len);
-    pp_unit_t pp_get_unit(pp_t pp);
     parameter_type_t pp_get_type(pp_t pp);
     const char *pp_get_name(pp_t pp);
     const void *pp_get_valueptr(pp_t pp);
@@ -122,11 +107,7 @@ extern "C"
 
     int pp_get_info(int index, pp_info_t *info);
 
-    const char *pp_unit_to_str(pp_unit_t unit);
-    pp_unit_t pp_string_to_unit(const char *str);
-
     bool pp_set_json_cb(pp_t pp, pp_json_cb_t cb);
-    bool pp_set_unit(pp_t pp, pp_unit_t unit);
     bool pp_evloop_post(pp_evloop_t *evloop, int32_t id, void *data, size_t data_size);
 
 #ifdef __cplusplus

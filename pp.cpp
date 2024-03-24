@@ -10,9 +10,8 @@
 #include "esp_debug_helpers.h"
 
 #define MAX_PUBLIC_PARAMETERS 50
-#define MAX_STR 128
 #define ID_COUNTER_START 1000
-#define POST_WAIT_MS 0
+#define POST_WAIT_MS 10
 
 typedef struct
 {
@@ -20,11 +19,9 @@ typedef struct
     struct
     {
         const char *name;
-        pp_unit_t unit;
         pp_evloop_t *owner;
         pp_json_cb_t json_cb;
         parameter_type_t type;
-        char *format_str;
     } conf;
 
     // State part
@@ -39,7 +36,6 @@ typedef struct
     } state;
 } public_parameter_t;
 
-static const char *unit_str[] = {"", "V", "A", "Wh", "lpm", "Kg", "%", "g"};
 static public_parameter_t par_list[MAX_PUBLIC_PARAMETERS];
 static std::map<std::string, public_parameter_t *> nameToPP;
 static int32_t event_id_counter = ID_COUNTER_START;
@@ -113,7 +109,6 @@ static pp_t pp_create(const char *name, pp_evloop_t *evloop, parameter_type_t ty
     p->conf.name = name;
     p->conf.owner = evloop;
     p->conf.type = type;
-    p->conf.unit = UNIT_NONE;
     p->conf.json_cb = NULL;
     p->state.newstate_id = event_id_counter++;
     p->state.write_id = event_id_counter++;
@@ -223,46 +218,11 @@ bool pp_evloop_post(pp_evloop_t *evloop, int32_t id, void *data, size_t data_siz
         if (ESP_OK != err)
         {
             ESP_LOGE(TAG, "%s: esp_event_post_to, Receiver is %s - %s", __func__, evloop->base, esp_err_to_name(err));
-//            esp_backtrace_print(5);
+            esp_backtrace_print(5);
             return false;
         }
     }
     return true;
-}
-
-bool pp_set_unit(pp_t pp, pp_unit_t unit)
-{
-    ((public_parameter_t *)pp)->conf.unit = unit;
-    return true;
-}
-
-pp_unit_t pp_get_unit(pp_t pp)
-{
-    return ((public_parameter_t *)pp)->conf.unit;
-}
-
-const char *pp_unit_to_str(pp_unit_t unit)
-{
-    return unit_str[unit];
-}
-
-pp_unit_t pp_string_to_unit(const char *str)
-{
-    if (strcmp(str, unit_str[UNIT_V]) == 0)
-        return UNIT_V;
-    if (strcmp(str, unit_str[UNIT_A]) == 0)
-        return UNIT_A;
-    if (strcmp(str, unit_str[UNIT_Wh]) == 0)
-        return UNIT_Wh;
-    if (strcmp(str, unit_str[UNIT_lpm]) == 0)
-        return UNIT_lpm;
-    if (strcmp(str, unit_str[UNIT_Kg]) == 0)
-        return UNIT_Kg;
-    if (strcmp(str, unit_str[UNIT_PERCENTAGE]) == 0)
-        return UNIT_PERCENTAGE;
-    if (strcmp(str, unit_str[UNIT_G]) == 0)
-        return UNIT_G;
-    return UNIT_NONE;
 }
 
 pp_t pp_create_int32(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, const int32_t *valueptr)
@@ -391,6 +351,9 @@ bool pp_post_write_string(pp_t pp, const char *str)
 
 bool pp_post_newstate_string(pp_t pp, const char *str)
 {
+    if (pp == NULL || str == NULL)
+        return false;
+        
     public_parameter_t *p = (public_parameter_t *)pp;
 
     if (p->state.subscription_list.size() > 0)
@@ -559,7 +522,6 @@ int pp_get_info(int index, pp_info_t *info)
         {
             info->name = par_list[index].conf.name;
             info->type = par_list[index].conf.type;
-            info->unit = par_list[index].conf.unit;
             info->owner = par_list[index].conf.owner;
             info->subscriptions = par_list[index].state.subscription_list.size();
             info->valueptr = par_list[index].state.valueptr;
