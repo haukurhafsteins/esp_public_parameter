@@ -108,7 +108,6 @@ extern "C"
     int pp_get_info(int index, pp_info_t *info);
 
     bool pp_set_json_cb(pp_t pp, pp_json_cb_t cb);
-    bool pp_evloop_post(pp_evloop_t *evloop, int32_t id, void *data, size_t data_size);
 
 #ifdef __cplusplus
 } // extern "C"

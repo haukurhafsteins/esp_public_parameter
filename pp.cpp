@@ -11,7 +11,7 @@
 
 #define MAX_PUBLIC_PARAMETERS 50
 #define ID_COUNTER_START 1000
-#define POST_WAIT_MS 10
+#define POST_WAIT_MS 50
 
 typedef struct
 {
@@ -42,6 +42,13 @@ static int32_t event_id_counter = ID_COUNTER_START;
 
 static const char *TAG = "PP";
 
+static esp_err_t evloop_post(esp_event_loop_handle_t loop_handle, esp_event_base_t loop_base, int32_t id, void *data, size_t data_size)
+{
+    if (loop_handle == NULL)
+        return esp_event_post(loop_base, id, data, data_size, pdMS_TO_TICKS(POST_WAIT_MS));
+    return esp_event_post_to(loop_handle, loop_base, id, data, data_size, pdMS_TO_TICKS(POST_WAIT_MS));
+}
+
 static bool pp_newstate(public_parameter_t *p, void *data, size_t data_size)
 {
     if (p == NULL)
@@ -62,8 +69,14 @@ static bool pp_newstate(public_parameter_t *p, void *data, size_t data_size)
     int size = p->state.subscription_list.size();
     for (auto itc = p->state.subscription_list.begin(); itc != p->state.subscription_list.end(); itc++)
     {
-        if (pp_evloop_post(&itc->second, p->state.newstate_id, data, data_size))
+        esp_err_t err = evloop_post(itc->second.loop_handle, itc->second.base, p->state.newstate_id, data, data_size);
+        if (err == ESP_OK)
             size--;
+        else 
+        {
+            ESP_LOGE(TAG, "%s: Failed sending %s to %s - %s", __func__, p->conf.name ,itc->second.base, esp_err_to_name(err));
+            esp_backtrace_print(5);
+        }
     }
     return (size == 0); // all sends successful
 }
@@ -200,31 +213,6 @@ bool pp_event_handler_unregister(pp_evloop_t *evloop, int32_t id, esp_event_hand
     return err == ESP_OK;
 }
 
-bool pp_evloop_post(pp_evloop_t *evloop, int32_t id, void *data, size_t data_size)
-{
-    if (evloop->loop_handle == NULL)
-    {
-        esp_err_t err = esp_event_post(evloop->base, id, data, data_size, pdMS_TO_TICKS(POST_WAIT_MS));
-        if (ESP_OK != err)
-        {
-            ESP_LOGE(TAG, "%s: esp_event_post, Receiver is %s - %s", __func__, evloop->base, esp_err_to_name(err));
-//            esp_backtrace_print(5);
-            return false;
-        }
-    }
-    else
-    {
-        esp_err_t err = esp_event_post_to(evloop->loop_handle, evloop->base, id, data, data_size, pdMS_TO_TICKS(POST_WAIT_MS));
-        if (ESP_OK != err)
-        {
-            ESP_LOGE(TAG, "%s: esp_event_post_to, Receiver is %s - %s", __func__, evloop->base, esp_err_to_name(err));
-            esp_backtrace_print(5);
-            return false;
-        }
-    }
-    return true;
-}
-
 pp_t pp_create_int32(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, const int32_t *valueptr)
 {
     pp_t ret = pp_create(name, evloop, TYPE_INT32, event_write_cb, valueptr);
@@ -325,28 +313,28 @@ bool pp_post_write_bool(pp_t pp, bool value)
     public_parameter_t *p = (public_parameter_t *)pp;
     if (p == NULL || p->conf.owner == NULL)
         return false;
-    return pp_evloop_post(p->conf.owner, p->state.write_id, (void *)&value, sizeof(bool));
+    return ESP_OK == evloop_post(p->conf.owner->loop_handle, p->conf.owner->base, p->state.write_id, (void *)&value, sizeof(bool));
 }
 bool pp_post_write_int32(pp_t pp, int32_t value)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
     if (p == NULL || p->conf.owner == NULL)
         return false;
-    return pp_evloop_post(p->conf.owner, p->state.write_id, (void *)&value, sizeof(int32_t));
+    return ESP_OK == evloop_post(p->conf.owner->loop_handle, p->conf.owner->base, p->state.write_id, (void *)&value, sizeof(int32_t));
 }
 bool pp_post_write_float(pp_t pp, float value)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
     if (p == NULL || p->conf.owner == NULL)
         return false;
-    return pp_evloop_post(p->conf.owner, p->state.write_id, (void *)&value, sizeof(float));
+    return ESP_OK == evloop_post(p->conf.owner->loop_handle, p->conf.owner->base, p->state.write_id, (void *)&value, sizeof(float));
 }
 bool pp_post_write_string(pp_t pp, const char *str)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
     if (p == NULL || p->conf.owner == NULL)
         return false;
-    return pp_evloop_post(p->conf.owner, p->state.write_id, (void *)str, strlen(str) + 1);
+    return ESP_OK == evloop_post(p->conf.owner->loop_handle, p->conf.owner->base, p->state.write_id, (void *)str, strlen(str) + 1);
 }
 
 bool pp_post_newstate_string(pp_t pp, const char *str)
