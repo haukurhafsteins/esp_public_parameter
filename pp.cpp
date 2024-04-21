@@ -133,6 +133,13 @@ static pp_t pp_create(const char *name, pp_evloop_t *evloop, parameter_type_t ty
     return p;
 }
 
+static int pp_json_no_valueptr(const char* name, char *buf, size_t *bufsize, bool json)
+{
+    if (json)
+        return snprintf(buf, *bufsize, "{\"%s\":null}", name);
+    return snprintf(buf, *bufsize, "null");
+}
+
 static bool pp_json_int32(pp_t pp, char *buf, size_t *bufsize, bool json)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
@@ -146,31 +153,48 @@ static bool pp_json_int32(pp_t pp, char *buf, size_t *bufsize, bool json)
     }
     else
     {
-        if (json)
-            *bufsize = snprintf(buf, *bufsize, "{\"%s\":null}", p->conf.name);
-        else
-            *bufsize = snprintf(buf, *bufsize, "null");
+        *bufsize = pp_json_no_valueptr(p->conf.name, buf, bufsize, json);
     }
     return true;
 }
 
-static bool pp_json_float(pp_t pp, char *buf, size_t *bufsize)
+static bool pp_json_float(pp_t pp, char *buf, size_t *bufsize, bool json)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
-    float value = *((float *)p->state.valueptr);
-    *bufsize = snprintf(buf, *bufsize, "%f", value);
+    if (p->state.valueptr != NULL)
+    {
+        float value = *((float *)p->state.valueptr);
+        if (json)
+            *bufsize = snprintf(buf, *bufsize, "{\"%s\":%f}", p->conf.name, value);
+        else
+            *bufsize = snprintf(buf, *bufsize, "%f", value);
+    }
+    else
+    {
+        *bufsize = pp_json_no_valueptr(p->conf.name, buf, bufsize, json);
+    }
     return true;
 }
 
-static bool pp_json_bool(pp_t pp, char *buf, size_t *bufsize)
+static bool pp_json_bool(pp_t pp, char *buf, size_t *bufsize, bool json)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
-    bool value = *((bool *)p->state.valueptr);
-    *bufsize = snprintf(buf, *bufsize, "%s", value ? "true" : "false");
+    if (p->state.valueptr != NULL)
+    {
+        bool value = *((bool *)p->state.valueptr);
+        if (json)
+            *bufsize = snprintf(buf, *bufsize, "{\"%s\":%s}", p->conf.name, value ? "true" : "false");
+        else
+            *bufsize = snprintf(buf, *bufsize, "%s", value ? "true" : "false");
+    }
+    else
+    {
+        *bufsize = pp_json_no_valueptr(p->conf.name, buf, bufsize, json);
+    }
     return true;
 }
 
-static bool pp_json_string(pp_t pp, char *buf, size_t *bufsize)
+static bool pp_json_string(pp_t pp, char *buf, size_t *bufsize, bool json)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
     const char *value = (const char *)p->state.valueptr;
@@ -223,8 +247,8 @@ pp_t pp_create_int32(const char *name, pp_evloop_t *evloop, esp_event_handler_t 
 pp_t pp_create_float(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, float *valueptr)
 {
     pp_t ret = pp_create(name, evloop, TYPE_FLOAT, event_write_cb, valueptr);
-    // if (ret != NULL)
-    //     pp_set_json_cb(ret, pp_json_float);
+    if (ret != NULL)
+        pp_set_json_cb(ret, pp_json_float);
     return ret;
 }
 bool pp_delete(pp_t pp)
@@ -252,8 +276,8 @@ pp_t pp_create_float_array(const char *name, pp_evloop_t *evloop, esp_event_hand
 pp_t pp_create_bool(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, bool *valueptr)
 {
     pp_t ret = pp_create(name, evloop, TYPE_BOOL, event_write_cb, valueptr);
-    // if (ret != NULL)
-    //     pp_set_json_cb(ret, pp_json_bool);
+    if (ret != NULL)
+        pp_set_json_cb(ret, pp_json_bool);
     return ret;
 }
 pp_t pp_create_string(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb /*, tojson_cb_t tojson*/)
