@@ -158,6 +158,24 @@ static bool pp_json_int32(pp_t pp, char *buf, size_t *bufsize, bool json)
     return true;
 }
 
+static bool pp_json_int64(pp_t pp, char *buf, size_t *bufsize, bool json)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+    if (p->state.valueptr != NULL)
+    {
+        int64_t value = *((int64_t *)p->state.valueptr);
+        if (json)
+            *bufsize = snprintf(buf, *bufsize, "{\"%s\":%lli}", p->conf.name, value);
+        else
+            *bufsize = snprintf(buf, *bufsize, "%lli", value);
+    }
+    else
+    {
+        *bufsize = pp_json_no_valueptr(p->conf.name, buf, bufsize, json);
+    }
+    return true;
+}
+
 static bool pp_json_float(pp_t pp, char *buf, size_t *bufsize, bool json)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
@@ -242,6 +260,13 @@ pp_t pp_create_int32(const char *name, pp_evloop_t *evloop, esp_event_handler_t 
     pp_t ret = pp_create(name, evloop, TYPE_INT32, event_write_cb, valueptr);
     if (ret != NULL)
         pp_set_json_cb(ret, pp_json_int32);
+    return ret;
+}
+pp_t pp_create_int64(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, const int64_t *valueptr)
+{
+    pp_t ret = pp_create(name, evloop, TYPE_INT64, event_write_cb, valueptr);
+    if (ret != NULL)
+        pp_set_json_cb(ret, pp_json_int64);
     return ret;
 }
 pp_t pp_create_float(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, float *valueptr)
@@ -388,6 +413,15 @@ bool pp_post_newstate_int32(pp_t pp, int32_t i)
 
     if (p->state.subscription_list.size() > 0)
         return pp_newstate(p, &i, sizeof(int32_t));
+    return true;
+}
+
+bool pp_post_newstate_int64(pp_t pp, int64_t i)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+
+    if (p->state.subscription_list.size() > 0)
+        return pp_newstate(p, &i, sizeof(int64_t));
     return true;
 }
 

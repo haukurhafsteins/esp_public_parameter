@@ -16,6 +16,7 @@ extern "C"
     {
         TYPE_UNKNOWN = -1,
         TYPE_INT32,
+        TYPE_INT64,
         TYPE_FLOAT,
         TYPE_BOOL,
         TYPE_FLOAT_ARRAY,
@@ -74,6 +75,7 @@ extern "C"
     void pp_reset_int16_array(pp_int16_array_t *array);
 
     pp_t pp_create_int32(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, const int32_t *valueptr);
+    pp_t pp_create_int64(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, const int64_t *valueptr);
     pp_t pp_create_float(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, float *valueptr);
     pp_t pp_create_float_array(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb);
     pp_t pp_create_bool(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, bool *valueptr);
@@ -84,6 +86,7 @@ extern "C"
 
     bool pp_post_newstate_int32(pp_t pp, int32_t i);
     bool pp_post_newstate_int32_irq(pp_t pp, int32_t i);
+    bool pp_post_newstate_int64(pp_t pp, int64_t i);
     bool pp_post_newstate_bool(pp_t pp, bool b);
     bool pp_post_newstate_float(pp_t pp, float f);
     bool pp_post_newstate_float_array(pp_t pp, pp_float_array_t *array);
