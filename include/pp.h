@@ -55,6 +55,11 @@ extern "C"
     typedef void *pp_t;
     typedef void *pp_event_t;
 
+    /// @brief Callback function to convert a parameter to a JSON string.
+    /// @param pp The parameter to convert.
+    /// @param buf The buffer to write the JSON string to.
+    /// @param bufsize The size of the buffer.
+    /// @param json If true, a json document is returned, otherwise a single json variable is returned.
     typedef bool (*pp_json_cb_t)(pp_t pp, char* buf, size_t *bufsize, bool json);
 
     pp_t pp_get(const char *name);
