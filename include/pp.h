@@ -99,6 +99,7 @@ extern "C"
     bool pp_post_newstate_string(pp_t pp, const char *str);
 
     bool pp_post_write_int32(pp_t pp, int32_t value);
+    bool pp_post_write_int64(pp_t pp, int64_t value);
     bool pp_post_write_float(pp_t pp, float value);
     bool pp_post_write_bool(pp_t pp, bool value);
     bool pp_post_write_string(pp_t pp, const char *str);
@@ -108,7 +109,6 @@ extern "C"
     //pp_event_t pp_event_add(pp_evloop_t *evloop, int id, int ms, bool periodic, void *data, size_t data_size);
     bool pp_event_handler_register(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void *p);
     bool pp_event_handler_unregister(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb);
-    void pp_event_remove(pp_event_t ev);
 
     bool pp_subscribe(pp_t pp, pp_evloop_t *receiver, esp_event_handler_t event_cb);
     bool pp_unsubscribe(pp_t pp, pp_evloop_t *receiver, esp_event_handler_t event_cb);
@@ -116,6 +116,7 @@ extern "C"
     int pp_get_info(int index, pp_info_t *info);
 
     bool pp_set_json_cb(pp_t pp, pp_json_cb_t cb);
+    bool pp_set_valueptr(pp_t pp, const void *valueptr);
 
 #ifdef __cplusplus
 } // extern "C"

@@ -371,6 +371,13 @@ bool pp_post_write_int32(pp_t pp, int32_t value)
         return false;
     return ESP_OK == evloop_post(p->conf.owner->loop_handle, p->conf.owner->base, p->state.write_id, (void *)&value, sizeof(int32_t));
 }
+bool pp_post_write_int64(pp_t pp, int64_t value)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+    if (p == NULL || p->conf.owner == NULL)
+        return false;
+    return ESP_OK == evloop_post(p->conf.owner->loop_handle, p->conf.owner->base, p->state.write_id, (void *)&value, sizeof(int64_t));
+}
 bool pp_post_write_float(pp_t pp, float value)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
@@ -549,6 +556,13 @@ bool pp_set_json_cb(pp_t pp, pp_json_cb_t json_cb)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
     p->conf.json_cb = json_cb;
+    return true;
+}
+
+bool pp_set_valueptr(pp_t pp, const void *valueptr)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+    p->state.valueptr = valueptr;
     return true;
 }
 
