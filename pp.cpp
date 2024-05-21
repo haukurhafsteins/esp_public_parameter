@@ -74,8 +74,8 @@ static bool pp_newstate(public_parameter_t *p, void *data, size_t data_size)
             size--;
         else 
         {
-            ESP_LOGE(TAG, "%s: Failed sending %s to %s - %s", __func__, p->conf.name ,itc->second.base, esp_err_to_name(err));
-            esp_backtrace_print(5);
+            //ESP_LOGE(TAG, "%s: Failed sending %s to %s - %s", __func__, p->conf.name ,itc->second.base, esp_err_to_name(err));
+            //esp_backtrace_print(5);
         }
     }
     return (size == 0); // all sends successful
