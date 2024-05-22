@@ -10,7 +10,9 @@
 #include "esp_debug_helpers.h"
 
 #define MAX_PUBLIC_PARAMETERS 50
-#define ID_COUNTER_START 1000
+#define ID_SUBSCRIBE 1000
+#define ID_UNSUBSCRIBE 1001
+#define ID_COUNTER_START 1002
 #define POST_WAIT_MS 50
 
 typedef struct
@@ -72,10 +74,10 @@ static bool pp_newstate(public_parameter_t *p, void *data, size_t data_size)
         esp_err_t err = evloop_post(itc->second.loop_handle, itc->second.base, p->state.newstate_id, data, data_size);
         if (err == ESP_OK)
             size--;
-        else 
+        else
         {
-            //ESP_LOGE(TAG, "%s: Failed sending %s to %s - %s", __func__, p->conf.name ,itc->second.base, esp_err_to_name(err));
-            //esp_backtrace_print(5);
+            // ESP_LOGE(TAG, "%s: Failed sending %s to %s - %s", __func__, p->conf.name ,itc->second.base, esp_err_to_name(err));
+            // esp_backtrace_print(5);
         }
     }
     return (size == 0); // all sends successful
@@ -133,7 +135,7 @@ static pp_t pp_create(const char *name, pp_evloop_t *evloop, parameter_type_t ty
     return p;
 }
 
-static int pp_json_no_valueptr(const char* name, char *buf, size_t *bufsize, bool json)
+static int pp_json_no_valueptr(const char *name, char *buf, size_t *bufsize, bool json)
 {
     if (json)
         return snprintf(buf, *bufsize, "{\"%s\":null}", name);
@@ -223,6 +225,16 @@ static bool pp_json_string(pp_t pp, char *buf, size_t *bufsize, bool json)
 //-----------------------------------------------------------------------
 // Public stuff
 //-----------------------------------------------------------------------
+
+bool pp_event_handler_register_subscribe_cb(pp_evloop_t *evloop, esp_event_handler_t cb, void *p)
+{
+    return pp_event_handler_register(evloop, ID_SUBSCRIBE, cb, p);
+}
+bool pp_event_handler_register_unsubscribe_cb(pp_evloop_t *evloop, esp_event_handler_t cb, void *p)
+{
+    return pp_event_handler_register(evloop, ID_UNSUBSCRIBE, cb, p);
+}
+
 bool pp_event_handler_register(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void *p)
 {
     esp_err_t err;
@@ -342,6 +354,8 @@ bool pp_subscribe(pp_t pp, pp_evloop_t *evloop, esp_event_handler_t event_cb)
     if (pp_event_handler_register(evloop, p->state.newstate_id, event_cb, p))
     {
         p->state.subscription_list[evloop->loop_handle] = *evloop;
+        evloop_post(p->conf.owner->loop_handle, p->conf.owner->base, ID_SUBSCRIBE, pp, sizeof(pp_t));
+
         return true;
     }
     return false;
@@ -355,6 +369,7 @@ bool pp_unsubscribe(pp_t pp, pp_evloop_t *evloop, esp_event_handler_t event_cb)
     }
 
     public_parameter_t *p = (public_parameter_t *)pp;
+    evloop_post(p->conf.owner->loop_handle, p->conf.owner->base, ID_UNSUBSCRIBE, pp, sizeof(pp_t));
     return pp_event_handler_unregister(evloop, p->state.newstate_id, event_cb);
 }
 bool pp_post_write_bool(pp_t pp, bool value)
@@ -397,7 +412,7 @@ bool pp_post_newstate_string(pp_t pp, const char *str)
 {
     if (pp == NULL || str == NULL)
         return false;
-        
+
     public_parameter_t *p = (public_parameter_t *)pp;
 
     if (p->state.subscription_list.size() > 0)

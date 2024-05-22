@@ -109,6 +109,13 @@ extern "C"
     //pp_event_t pp_event_add(pp_evloop_t *evloop, int id, int ms, bool periodic, void *data, size_t data_size);
     bool pp_event_handler_register(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void *p);
     bool pp_event_handler_unregister(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb);
+    /// @brief Register callback that will be called for every registration of a new subscriber to a parameter owned by this event loop. 
+    /// @param evloop The evloop to register the callback to.
+    /// @param cb The callback function to call.
+    /// @param p Context pointer to pass to the callback function.
+    /// @return True if the callback was successfully registered, false otherwise.
+    bool pp_event_handler_register_subscribe_cb(pp_evloop_t *evloop, esp_event_handler_t cb, void *p);
+    bool pp_event_handler_register_unsubscribe_cb(pp_evloop_t *evloop, esp_event_handler_t cb, void *p);
 
     bool pp_subscribe(pp_t pp, pp_evloop_t *receiver, esp_event_handler_t event_cb);
     bool pp_unsubscribe(pp_t pp, pp_evloop_t *receiver, esp_event_handler_t event_cb);
