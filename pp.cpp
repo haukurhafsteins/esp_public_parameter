@@ -214,13 +214,13 @@ static bool pp_json_bool(pp_t pp, char *buf, size_t *bufsize, bool json)
     return true;
 }
 
-static bool pp_json_string(pp_t pp, char *buf, size_t *bufsize, bool json)
-{
-    public_parameter_t *p = (public_parameter_t *)pp;
-    const char *value = (const char *)p->state.valueptr;
-    *bufsize = snprintf(buf, *bufsize, "%s", value);
-    return true;
-}
+// static bool pp_json_string(pp_t pp, char *buf, size_t *bufsize, bool json)
+// {
+//     public_parameter_t *p = (public_parameter_t *)pp;
+//     const char *value = (const char *)p->state.valueptr;
+//     *bufsize = snprintf(buf, *bufsize, "%s", value);
+//     return true;
+// }
 
 //-----------------------------------------------------------------------
 // Public stuff
@@ -354,7 +354,8 @@ bool pp_subscribe(pp_t pp, pp_evloop_t *evloop, esp_event_handler_t event_cb)
     if (pp_event_handler_register(evloop, p->state.newstate_id, event_cb, p))
     {
         p->state.subscription_list[evloop->loop_handle] = *evloop;
-        evloop_post(p->conf.owner->loop_handle, p->conf.owner->base, ID_SUBSCRIBE, pp, sizeof(pp_t));
+        if (p->conf.owner != NULL)
+            evloop_post(p->conf.owner->loop_handle, p->conf.owner->base, ID_SUBSCRIBE, pp, sizeof(pp_t));
 
         return true;
     }
@@ -369,7 +370,8 @@ bool pp_unsubscribe(pp_t pp, pp_evloop_t *evloop, esp_event_handler_t event_cb)
     }
 
     public_parameter_t *p = (public_parameter_t *)pp;
-    evloop_post(p->conf.owner->loop_handle, p->conf.owner->base, ID_UNSUBSCRIBE, pp, sizeof(pp_t));
+    if (p->conf.owner != NULL)
+        evloop_post(p->conf.owner->loop_handle, p->conf.owner->base, ID_UNSUBSCRIBE, pp, sizeof(pp_t));
     return pp_event_handler_unregister(evloop, p->state.newstate_id, event_cb);
 }
 bool pp_post_write_bool(pp_t pp, bool value)
