@@ -9,7 +9,7 @@
 #include "pp.h"
 #include "esp_debug_helpers.h"
 
-#define MAX_PUBLIC_PARAMETERS 50
+#define MAX_PUBLIC_PARAMETERS 55
 #define ID_SUBSCRIBE 1000
 #define ID_UNSUBSCRIBE 1001
 #define ID_COUNTER_START 1002
