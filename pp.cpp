@@ -83,6 +83,21 @@ static bool pp_newstate(public_parameter_t *p, void *data, size_t data_size)
     return (size == 0); // all sends successful
 }
 
+static bool pp_newstate_irq(public_parameter_t *p, void *data, size_t data_size)
+{
+    int size = p->state.subscription_list.size();
+    if (size > 0)
+    {
+        for (auto itc = p->state.subscription_list.begin(); itc != p->state.subscription_list.end(); itc++)
+        {
+            if (ESP_OK == esp_event_isr_post_to(itc->second.loop_handle, itc->second.base, p->state.newstate_id, data, data_size, NULL))
+                size--;
+        }
+        return (size == 0); // all sends successful
+    }
+    return false;
+}
+
 static pp_t pp_create(const char *name, pp_evloop_t *evloop, parameter_type_t type, esp_event_handler_t event_write_cb, const void *valueptr)
 {
     if (name == NULL)
@@ -453,17 +468,7 @@ bool pp_post_newstate_int32_irq(pp_t pp, int32_t i)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
 
-    int size = p->state.subscription_list.size();
-    if (size > 0)
-    {
-        for (auto itc = p->state.subscription_list.begin(); itc != p->state.subscription_list.end(); itc++)
-        {
-            if (ESP_OK == esp_event_isr_post_to(itc->second.loop_handle, itc->second.base, p->state.newstate_id, &i, sizeof(int32_t), NULL))
-                size--;
-        }
-        return (size == 0); // all sends successful
-    }
-    return false;
+    return pp_newstate_irq(p, &i, sizeof(int32_t));
 }
 
 bool pp_post_newstate_bool(pp_t pp, bool b)
@@ -473,6 +478,13 @@ bool pp_post_newstate_bool(pp_t pp, bool b)
     if (p->state.subscription_list.size() > 0)
         return pp_newstate(p, &b, sizeof(bool));
     return true;
+}
+
+bool pp_post_newstate_bool_irq(pp_t pp, bool b)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+
+    return pp_newstate_irq(p, &b, sizeof(bool));
 }
 
 bool pp_post_newstate_float(pp_t pp, float f)

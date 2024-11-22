@@ -93,6 +93,7 @@ extern "C"
     bool pp_post_newstate_int32_irq(pp_t pp, int32_t i);
     bool pp_post_newstate_int64(pp_t pp, int64_t i);
     bool pp_post_newstate_bool(pp_t pp, bool b);
+    bool pp_post_newstate_bool_irq(pp_t pp, bool b);
     bool pp_post_newstate_float(pp_t pp, float f);
     bool pp_post_newstate_float_array(pp_t pp, pp_float_array_t *array);
     bool pp_post_newstate_binary(pp_t pp, void *bin, size_t size);
