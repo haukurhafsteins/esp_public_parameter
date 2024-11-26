@@ -47,7 +47,7 @@ extern "C"
     typedef struct pp_info_t {
         const char* name;
         parameter_type_t type;
-        pp_evloop_t *owner;
+        const pp_evloop_t *owner;
         const void* valueptr;
         size_t subscriptions;
     } pp_info_t;
@@ -69,7 +69,7 @@ extern "C"
     const char *pp_get_name(pp_t pp);
     const void *pp_get_valueptr(pp_t pp);
     pp_t pp_get_par(int index);
-    pp_evloop_t *pp_get_owner(pp_t pp);
+    const pp_evloop_t *pp_get_owner(pp_t pp);
     int pp_get_subscriptions(pp_t pp);
 
     void pp_enable(pp_t pp, bool enable);
@@ -79,13 +79,13 @@ extern "C"
     void pp_reset_float_array(pp_float_array_t *array);
     void pp_reset_int16_array(pp_int16_array_t *array);
 
-    pp_t pp_create_int32(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, const int32_t *valueptr);
-    pp_t pp_create_int64(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, const int64_t *valueptr);
-    pp_t pp_create_float(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, float *valueptr);
-    pp_t pp_create_float_array(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb);
-    pp_t pp_create_bool(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, bool *valueptr);
-    pp_t pp_create_binary(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb/*, tojson_cb_t tojson*/);
-    pp_t pp_create_string(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb/*, tojson_cb_t tojson*/);
+    pp_t pp_create_int32(const char *name, const pp_evloop_t *evloop, esp_event_handler_t event_write_cb, const int32_t *valueptr);
+    pp_t pp_create_int64(const char *name, const pp_evloop_t *evloop, esp_event_handler_t event_write_cb, const int64_t *valueptr);
+    pp_t pp_create_float(const char *name, const pp_evloop_t *evloop, esp_event_handler_t event_write_cb, float *valueptr);
+    pp_t pp_create_float_array(const char *name, const pp_evloop_t *evloop, esp_event_handler_t event_write_cb);
+    pp_t pp_create_bool(const char *name, const pp_evloop_t *evloop, esp_event_handler_t event_write_cb, bool *valueptr);
+    pp_t pp_create_binary(const char *name, const pp_evloop_t *evloop, esp_event_handler_t event_write_cb/*, tojson_cb_t tojson*/);
+    pp_t pp_create_string(const char *name, const pp_evloop_t *evloop, esp_event_handler_t event_write_cb/*, tojson_cb_t tojson*/);
 
     bool pp_delete(pp_t pp);
 
@@ -107,19 +107,19 @@ extern "C"
 
     bool pp_get_as_string(pp_t pp, char *buf, size_t *bufsize, bool json);
 
-    //pp_event_t pp_event_add(pp_evloop_t *evloop, int id, int ms, bool periodic, void *data, size_t data_size);
-    bool pp_event_handler_register(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void *p);
-    bool pp_event_handler_unregister(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb);
+    //pp_event_t pp_event_add(const pp_evloop_t *evloop, int id, int ms, bool periodic, void *data, size_t data_size);
+    bool pp_event_handler_register(const pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void *p);
+    bool pp_event_handler_unregister(const pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb);
     /// @brief Register callback that will be called for every registration of a new subscriber to a parameter owned by this event loop. 
     /// @param evloop The evloop to register the callback to.
     /// @param cb The callback function to call.
     /// @param p Context pointer to pass to the callback function.
     /// @return True if the callback was successfully registered, false otherwise.
-    bool pp_event_handler_register_subscribe_cb(pp_evloop_t *evloop, esp_event_handler_t cb, void *p);
-    bool pp_event_handler_register_unsubscribe_cb(pp_evloop_t *evloop, esp_event_handler_t cb, void *p);
+    bool pp_event_handler_register_subscribe_cb(const pp_evloop_t *evloop, esp_event_handler_t cb, void *p);
+    bool pp_event_handler_register_unsubscribe_cb(const pp_evloop_t *evloop, esp_event_handler_t cb, void *p);
 
-    bool pp_subscribe(pp_t pp, pp_evloop_t *receiver, esp_event_handler_t event_cb);
-    bool pp_unsubscribe(pp_t pp, pp_evloop_t *receiver, esp_event_handler_t event_cb);
+    bool pp_subscribe(pp_t pp, const pp_evloop_t *receiver, esp_event_handler_t event_cb);
+    bool pp_unsubscribe(pp_t pp, const pp_evloop_t *receiver, esp_event_handler_t event_cb);
 
     int pp_get_info(int index, pp_info_t *info);
 

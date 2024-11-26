@@ -21,7 +21,7 @@ typedef struct
     struct
     {
         const char *name;
-        pp_evloop_t *owner;
+        const pp_evloop_t *owner;
         pp_json_cb_t json_cb;
         parameter_type_t type;
     } conf;
@@ -98,7 +98,7 @@ static bool pp_newstate_irq(public_parameter_t *p, void *data, size_t data_size)
     return false;
 }
 
-static pp_t pp_create(const char *name, pp_evloop_t *evloop, parameter_type_t type, esp_event_handler_t event_write_cb, const void *valueptr)
+static pp_t pp_create(const char *name, const pp_evloop_t *evloop, parameter_type_t type, esp_event_handler_t event_write_cb, const void *valueptr)
 {
     if (name == NULL)
     {
@@ -241,16 +241,16 @@ static bool pp_json_bool(pp_t pp, char *buf, size_t *bufsize, bool json)
 // Public stuff
 //-----------------------------------------------------------------------
 
-bool pp_event_handler_register_subscribe_cb(pp_evloop_t *evloop, esp_event_handler_t cb, void *p)
+bool pp_event_handler_register_subscribe_cb(const pp_evloop_t *evloop, esp_event_handler_t cb, void *p)
 {
     return pp_event_handler_register(evloop, ID_SUBSCRIBE, cb, p);
 }
-bool pp_event_handler_register_unsubscribe_cb(pp_evloop_t *evloop, esp_event_handler_t cb, void *p)
+bool pp_event_handler_register_unsubscribe_cb(const pp_evloop_t *evloop, esp_event_handler_t cb, void *p)
 {
     return pp_event_handler_register(evloop, ID_UNSUBSCRIBE, cb, p);
 }
 
-bool pp_event_handler_register(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void *p)
+bool pp_event_handler_register(const pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void *p)
 {
     esp_err_t err;
     if (evloop->loop_handle == NULL)
@@ -266,7 +266,7 @@ bool pp_event_handler_register(pp_evloop_t *evloop, int32_t id, esp_event_handle
     return err == ESP_OK;
 }
 
-bool pp_event_handler_unregister(pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb)
+bool pp_event_handler_unregister(const pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb)
 {
     esp_err_t err;
     if (evloop->loop_handle == NULL)
@@ -282,21 +282,21 @@ bool pp_event_handler_unregister(pp_evloop_t *evloop, int32_t id, esp_event_hand
     return err == ESP_OK;
 }
 
-pp_t pp_create_int32(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, const int32_t *valueptr)
+pp_t pp_create_int32(const char *name, const pp_evloop_t *evloop, esp_event_handler_t event_write_cb, const int32_t *valueptr)
 {
     pp_t ret = pp_create(name, evloop, TYPE_INT32, event_write_cb, valueptr);
     if (ret != NULL)
         pp_set_json_cb(ret, pp_json_int32);
     return ret;
 }
-pp_t pp_create_int64(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, const int64_t *valueptr)
+pp_t pp_create_int64(const char *name, const pp_evloop_t *evloop, esp_event_handler_t event_write_cb, const int64_t *valueptr)
 {
     pp_t ret = pp_create(name, evloop, TYPE_INT64, event_write_cb, valueptr);
     if (ret != NULL)
         pp_set_json_cb(ret, pp_json_int64);
     return ret;
 }
-pp_t pp_create_float(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, float *valueptr)
+pp_t pp_create_float(const char *name, const pp_evloop_t *evloop, esp_event_handler_t event_write_cb, float *valueptr)
 {
     pp_t ret = pp_create(name, evloop, TYPE_FLOAT, event_write_cb, valueptr);
     if (ret != NULL)
@@ -321,23 +321,23 @@ float pp_get_float_value(pp_t pp)
 
     return *((float *)p->state.valueptr);
 }
-pp_t pp_create_float_array(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb)
+pp_t pp_create_float_array(const char *name, const pp_evloop_t *evloop, esp_event_handler_t event_write_cb)
 {
     return pp_create(name, evloop, TYPE_FLOAT_ARRAY, event_write_cb, NULL);
 }
-pp_t pp_create_bool(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb, bool *valueptr)
+pp_t pp_create_bool(const char *name, const pp_evloop_t *evloop, esp_event_handler_t event_write_cb, bool *valueptr)
 {
     pp_t ret = pp_create(name, evloop, TYPE_BOOL, event_write_cb, valueptr);
     if (ret != NULL)
         pp_set_json_cb(ret, pp_json_bool);
     return ret;
 }
-pp_t pp_create_string(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb /*, tojson_cb_t tojson*/)
+pp_t pp_create_string(const char *name, const pp_evloop_t *evloop, esp_event_handler_t event_write_cb /*, tojson_cb_t tojson*/)
 {
     pp_t pp = pp_create(name, evloop, TYPE_STRING, event_write_cb, 0);
     return pp;
 }
-pp_t pp_create_binary(const char *name, pp_evloop_t *evloop, esp_event_handler_t event_write_cb /*, tojson_cb_t tojson*/)
+pp_t pp_create_binary(const char *name, const pp_evloop_t *evloop, esp_event_handler_t event_write_cb /*, tojson_cb_t tojson*/)
 {
     pp_t pp = pp_create(name, evloop, TYPE_BINARY, event_write_cb, NULL);
     return pp;
@@ -353,7 +353,7 @@ pp_t pp_get(const char *name)
     return NULL;
 }
 
-bool pp_subscribe(pp_t pp, pp_evloop_t *evloop, esp_event_handler_t event_cb)
+bool pp_subscribe(pp_t pp, const pp_evloop_t *evloop, esp_event_handler_t event_cb)
 {
     if (pp == NULL)
     {
@@ -376,7 +376,7 @@ bool pp_subscribe(pp_t pp, pp_evloop_t *evloop, esp_event_handler_t event_cb)
     }
     return false;
 }
-bool pp_unsubscribe(pp_t pp, pp_evloop_t *evloop, esp_event_handler_t event_cb)
+bool pp_unsubscribe(pp_t pp, const pp_evloop_t *evloop, esp_event_handler_t event_cb)
 {
     if (pp == NULL)
     {
@@ -562,7 +562,7 @@ parameter_type_t pp_get_type(pp_t pp)
 //     return p->conf.tojson;
 // }
 
-pp_evloop_t *pp_get_owner(pp_t pp)
+const pp_evloop_t *pp_get_owner(pp_t pp)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
     return p->conf.owner;
