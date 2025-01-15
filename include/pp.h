@@ -125,6 +125,8 @@ extern "C"
 
     bool pp_set_json_cb(pp_t pp, pp_json_cb_t cb);
     bool pp_set_valueptr(pp_t pp, const void *valueptr);
+    bool pp_set_context(pp_t pp, void *context);
+    void *pp_get_context(pp_t pp);
 
 #ifdef __cplusplus
 } // extern "C"

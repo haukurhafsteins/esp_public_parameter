@@ -35,6 +35,7 @@ typedef struct
         /// @brief True if the parameter is active, false if it is inactive.
         bool is_active;
         const void *valueptr;
+        void *context;
     } state;
 } public_parameter_t;
 
@@ -631,4 +632,17 @@ bool pp_is_enabled(pp_t pp)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
     return p->state.is_active;
+}
+
+bool pp_set_context(pp_t pp, void *context)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+    p->state.context = context;
+    return true;
+}
+
+void *pp_get_context(pp_t pp)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+    return p->state.context;
 }
