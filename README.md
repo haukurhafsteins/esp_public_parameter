@@ -14,37 +14,33 @@ This library provides a flexible and efficient way to manage and interact with p
 
 ### Initialization
 
- To use the library, include the `pp.h` header file in your project:
-
+1. Ensure you have the ESP-IDF environment set up.
+2. Copy `pp.h` and `pp.cpp` into your project and add to your makefile.
+3. To use the library, include the `pp.h` header file in your project:
 ```c
 #include "pp.h"
 ```
-
-1. Ensure you have the ESP-IDF environment set up.
-2. Copy `pp.h` and `pp.cpp` into your project.
-3. Include `pp.h` in your source files.
 4. Compile using ESP-IDF.
+
 ### Creating Parameters
 You can create parameters of different types using the provided functions:
-
 ```c
 pp_t my_int32_param = pp_create_int32("my_int32", &my_evloop, my_write_cb, &my_int32_value);
 pp_t my_float_param = pp_create_float("my_float", &my_evloop, my_write_cb, &my_float_value);
-Subscribing to Parameters
+### Subscribing to Parameters
 To receive updates when a parameter changes, subscribe to it:
-
 ```c
 pp_subscribe(my_int32_param, &my_evloop, my_event_cb);
 ```
 ### Posting Updates
 You can update the value of a parameter and notify all subscribers:
-
 ```c
 pp_post_newstate_int32(my_int32_param, 42);
+pp_post_newstate_float(my_float, 98.6f);
+...
 ```
-### Converting to JSON
-Convert a parameter's value to a JSON string:
-
+### Serializing to JSON
+To get a parameter as a JSON string:
 ```c
 char buf[128];
 size_t bufsize = sizeof(buf);
@@ -52,7 +48,6 @@ pp_get_as_string(my_int32_param, buf, &bufsize, true);
 ```
 ### Deleting Parameters
 When a parameter is no longer needed, you can delete it:
-
 ```c
 pp_delete(my_int32_param);
 ```
