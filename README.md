@@ -27,6 +27,7 @@ You can create parameters of different types using the provided functions:
 ```c
 pp_t my_int32_param = pp_create_int32("my_int32", &my_evloop, my_write_cb, &my_int32_value);
 pp_t my_float_param = pp_create_float("my_float", &my_evloop, my_write_cb, &my_float_value);
+```
 ### Subscribing to Parameters
 To receive updates when a parameter changes, subscribe to it:
 ```c
