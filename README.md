@@ -14,11 +14,16 @@ This library provides a flexible and efficient way to manage and interact with p
 
 ### Initialization
 
-To use the library, include the `pp.h` header file in your project:
+ To use the library, include the `pp.h` header file in your project:
 
 ```c
 #include "pp.h"
 ```
+
+1. Ensure you have the ESP-IDF environment set up.
+2. Copy `pp.h` and `pp.cpp` into your project.
+3. Include `pp.h` in your source files.
+4. Compile using ESP-IDF.
 ### Creating Parameters
 You can create parameters of different types using the provided functions:
 
