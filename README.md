@@ -27,6 +27,8 @@ You can create parameters of different types using the provided functions:
 ```c
 pp_t my_int32_param = pp_create_int32("my_int32", &my_evloop, my_write_cb, &my_int32_value);
 pp_t my_float_param = pp_create_float("my_float", &my_evloop, my_write_cb, &my_float_value);
+pp_t my_object = pp_create_binary("my_object", &my_evloop, my_write_cb);
+...
 ```
 ### Subscribing to Parameters
 To receive updates when a parameter changes, subscribe to it:
@@ -38,6 +40,7 @@ You can update the value of a parameter and notify all subscribers:
 ```c
 pp_post_newstate_int32(my_int32_param, 42);
 pp_post_newstate_float(my_float, 98.6f);
+pp_post_newstate_binary(my_binary, &my_structure, sizeof(my_structure));
 ...
 ```
 ### Serializing to JSON
@@ -91,6 +94,67 @@ void app_main() {
     printf("JSON: %s\n", buf);  // Output: {"my_float":3.140000}
 }
 ```
+#### Example 3: Register a callback to convert a parameter/object to json
+This function will be called whenever the parameter needs to be converted into JSON.
+```c
+#include <stdio.h>
+#include <string.h>
+#include "pp.h"
+
+struct my_struct {
+    int the_int;
+    float the_float;
+};
+
+bool my_json_callback(pp_t pp, char *buf, size_t *bufsize, bool json) {
+    // Get the parameter name and value
+    const char *param_name = pp_get_name(pp);
+
+    // Format the JSON string
+    if (json)
+        *bufsize = snprintf(buf, *bufsize, "{ \"%s\": {\"the_int\": %d, \"the_float\": %f}}", param_name, my_struct.the_int, my_struct.the_float);
+    else
+        *bufsize = snprintf(buf, *bufsize, "{ %s: the_int: %d, the_float: %f", param_name, my_struct.the_int, my_struct.the_float);
+
+    return true;
+}
+
+void setup_parameter_with_json_callback() {
+    // Create a parameter
+    pp_evloop_t my_evloop = { .loop_handle = NULL, .base = "my_event_base" };
+    pp_t my_param = pp_create_binary("my_struct_pp", &my_evloop, NULL);
+
+    // Set the JSON callback
+    if (pp_set_json_cb(my_param, my_json_callback)) {
+        printf("Custom JSON callback registered successfully.\n");
+    } else {
+        printf("Failed to register JSON callback.\n");
+    }
+}
+
+```
+
+#### Example 4: Usage of pp_event_handler_register_subscribe_cb
+We want to register a callback function that gets called every time a new subscriber is added to a parameter in a specific event loop.
+First define the Event Handler Callback. The callback function will be triggered when a new subscriber is added:
+```c
+void my_subscribe_callback(void* handler_arg, esp_event_base_t base, int32_t id, void* event_data) {
+    pp_t pp = (pp_t)event_data;
+    const char* param_name = pp_get_name(pp);
+    printf("New subscription detected for parameter: %s\n", param_name);
+}
+```
+Register the Subscription Callback:
+```c
+void setup_subscribe_callback() {
+    if (pp_event_handler_register_subscribe_cb(&my_evloop, my_subscribe_callback, NULL)) {
+        printf("Subscription callback registered successfully.\n");
+    } else {
+        printf("Failed to register subscription callback.\n");
+    }
+}
+```
+
 ### API Reference
 For a detailed description of all functions and types, refer to the header file documentation.
 
