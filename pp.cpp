@@ -497,6 +497,13 @@ bool pp_post_newstate_float(pp_t pp, float f)
     return true;
 }
 
+bool pp_post_newstate_float_irq(pp_t pp, float f)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+
+    return pp_newstate_irq(p, &f, sizeof(float));
+}
+
 bool pp_post_newstate_float_array(pp_t pp, pp_float_array_t *fsrc)
 {
     public_parameter_t *p = (public_parameter_t *)pp;

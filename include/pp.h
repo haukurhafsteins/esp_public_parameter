@@ -229,6 +229,12 @@ extern "C"
     /// @return True if the new state was successfully posted, false otherwise.
     bool pp_post_newstate_float(pp_t pp, float f);
 
+    /// @brief Post a new state for a float parameter from an ISR.
+    /// @param pp The parameter handle.
+    /// @param f The new float value.
+    /// @return True if the new state was successfully posted, false otherwise.
+    bool pp_post_newstate_float_irq(pp_t pp, float f);
+
     /// @brief Post a new state for a float array parameter.
     /// @param pp The parameter handle.
     /// @param array The new float array.
