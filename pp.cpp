@@ -440,6 +440,9 @@ bool pp_post_newstate_string(pp_t pp, const char *str)
 
 bool pp_post_newstate_binary(pp_t pp, void *bin, size_t size)
 {
+    if (pp == NULL || bin == NULL)
+        return false;
+
     public_parameter_t *p = (public_parameter_t *)pp;
 
     if (p->state.subscription_list.size() > 0)
@@ -449,6 +452,9 @@ bool pp_post_newstate_binary(pp_t pp, void *bin, size_t size)
 
 bool pp_post_newstate_int32(pp_t pp, int32_t i)
 {
+    if (pp == NULL)
+        return false;
+
     public_parameter_t *p = (public_parameter_t *)pp;
 
     if (p->state.subscription_list.size() > 0)
@@ -458,6 +464,9 @@ bool pp_post_newstate_int32(pp_t pp, int32_t i)
 
 bool pp_post_newstate_int64(pp_t pp, int64_t i)
 {
+    if (pp == NULL)
+        return false;
+
     public_parameter_t *p = (public_parameter_t *)pp;
 
     if (p->state.subscription_list.size() > 0)
@@ -467,6 +476,9 @@ bool pp_post_newstate_int64(pp_t pp, int64_t i)
 
 bool pp_post_newstate_int32_irq(pp_t pp, int32_t i)
 {
+    if (pp == NULL)
+        return false;
+
     public_parameter_t *p = (public_parameter_t *)pp;
 
     return pp_newstate_irq(p, &i, sizeof(int32_t));
@@ -474,6 +486,9 @@ bool pp_post_newstate_int32_irq(pp_t pp, int32_t i)
 
 bool pp_post_newstate_bool(pp_t pp, bool b)
 {
+    if (pp == NULL)
+        return false;
+
     public_parameter_t *p = (public_parameter_t *)pp;
 
     if (p->state.subscription_list.size() > 0)
@@ -483,6 +498,9 @@ bool pp_post_newstate_bool(pp_t pp, bool b)
 
 bool pp_post_newstate_bool_irq(pp_t pp, bool b)
 {
+    if (pp == NULL)
+        return false;
+
     public_parameter_t *p = (public_parameter_t *)pp;
 
     return pp_newstate_irq(p, &b, sizeof(bool));
@@ -490,6 +508,9 @@ bool pp_post_newstate_bool_irq(pp_t pp, bool b)
 
 bool pp_post_newstate_float(pp_t pp, float f)
 {
+    if (pp == NULL)
+        return false;
+
     public_parameter_t *p = (public_parameter_t *)pp;
 
     if (p->state.subscription_list.size() > 0)
@@ -499,6 +520,9 @@ bool pp_post_newstate_float(pp_t pp, float f)
 
 bool pp_post_newstate_float_irq(pp_t pp, float f)
 {
+    if (pp == NULL)
+        return false;
+
     public_parameter_t *p = (public_parameter_t *)pp;
 
     return pp_newstate_irq(p, &f, sizeof(float));
@@ -506,6 +530,9 @@ bool pp_post_newstate_float_irq(pp_t pp, float f)
 
 bool pp_post_newstate_float_array(pp_t pp, pp_float_array_t *fsrc)
 {
+    if (pp == NULL || fsrc == NULL)
+        return false;
+
     public_parameter_t *p = (public_parameter_t *)pp;
 
     if (p->state.subscription_list.size() > 0)
