@@ -1,5 +1,4 @@
-#ifndef __pp_h__
-#define __pp_h__
+#pragma once
 
 #include "esp_event.h"
 
@@ -12,60 +11,68 @@ extern "C"
 {
 #endif
 
+    typedef struct pp_hooks
+    {
+        void *(*malloc_fn)(size_t sz);
+        void *(*calloc_fn)(size_t sz, size_t count);
+        void(*free_fn)(void *ptr);
+    } pp_hooks;
+
     /// @brief Enumeration of parameter types.
     typedef enum
     {
-        TYPE_UNKNOWN = -1,  ///< Unknown type.
-        TYPE_INT32,         ///< 32-bit integer type.
-        TYPE_INT64,         ///< 64-bit integer type.
-        TYPE_FLOAT,         ///< Floating-point type.
-        TYPE_BOOL,          ///< Boolean type.
-        TYPE_FLOAT_ARRAY,   ///< Array of floating-point numbers.
-        TYPE_INT16_ARRAY,   ///< Array of 16-bit integers.
-        TYPE_EXECUTE,       ///< Execute type (used for triggering actions).
-        TYPE_STRING,        ///< String type.
-        TYPE_BINARY         ///< Binary data type.
+        TYPE_UNKNOWN = -1, ///< Unknown type.
+        TYPE_INT32,        ///< 32-bit integer type.
+        TYPE_INT64,        ///< 64-bit integer type.
+        TYPE_FLOAT,        ///< Floating-point type.
+        TYPE_BOOL,         ///< Boolean type.
+        TYPE_FLOAT_ARRAY,  ///< Array of floating-point numbers.
+        TYPE_INT16_ARRAY,  ///< Array of 16-bit integers.
+        TYPE_EXECUTE,      ///< Execute type (used for triggering actions).
+        TYPE_STRING,       ///< String type.
+        TYPE_BINARY        ///< Binary data type.
     } parameter_type_t;
 
     /// @brief Structure representing a float array.
     typedef struct
     {
-        size_t len;         ///< Length of the array.
-        float data[];       ///< Array of float values.
+        size_t len;   ///< Length of the array.
+        float data[]; ///< Array of float values.
     } pp_float_array_t;
 
     /// @brief Structure representing an int16 array.
     typedef struct
     {
-        size_t len;         ///< Length of the array.
-        int16_t data[MAX_ARRAY_SIZE];  ///< Array of int16 values.
+        size_t len;                   ///< Length of the array.
+        int16_t data[MAX_ARRAY_SIZE]; ///< Array of int16 values.
     } pp_int16_array_t;
 
     /// @brief Structure representing an event loop.
     typedef struct
     {
-        esp_event_loop_handle_t loop_handle;  ///< Event loop handle.
-        esp_event_base_t base;                ///< Event base.
+        esp_event_loop_handle_t loop_handle; ///< Event loop handle.
+        esp_event_base_t base;               ///< Event base.
     } pp_evloop_t;
 
     /// @brief Structure representing information about a parameter.
-    typedef struct pp_info_t {
-        const char* name;           ///< Name of the parameter.
-        parameter_type_t type;      ///< Type of the parameter.
-        const pp_evloop_t *owner;   ///< Owner event loop of the parameter.
-        const void* valueptr;       ///< Pointer to the parameter's value.
-        size_t subscriptions;       ///< Number of subscriptions to the parameter.
+    typedef struct pp_info_t
+    {
+        const char *name;         ///< Name of the parameter.
+        parameter_type_t type;    ///< Type of the parameter.
+        const pp_evloop_t *owner; ///< Owner event loop of the parameter.
+        const void *valueptr;     ///< Pointer to the parameter's value.
+        size_t subscriptions;     ///< Number of subscriptions to the parameter.
     } pp_info_t;
 
-    typedef void *pp_t;             ///< Opaque handle to a parameter.
-    typedef void *pp_event_t;       ///< Opaque handle to an event.
+    typedef void *pp_t;       ///< Opaque handle to a parameter.
+    typedef void *pp_event_t; ///< Opaque handle to an event.
 
     /// @brief Callback function to convert a parameter to a JSON string.
     /// @param pp The parameter to convert.
     /// @param buf The buffer to write the JSON string to.
     /// @param bufsize The size of the buffer.
     /// @param json If true, a JSON document is returned; otherwise, a single JSON variable is returned.
-    typedef bool (*pp_json_cb_t)(pp_t pp, char* buf, size_t *bufsize, bool json);
+    typedef bool (*pp_json_cb_t)(pp_t pp, char *buf, size_t *bufsize, bool json);
 
     /// @brief Get a parameter by its name.
     /// @param name The name of the parameter.
@@ -124,9 +131,14 @@ extern "C"
 
     /// @brief Allocate memory for a float array.
     /// @param len The length of the float array.
-    /// @return A pointer to the allocated float array, or NULL if allocation failed.
+    /// @return A pointer to the allocated float array, or NULL if allocation failed. The user
+    ///         is responsible for freeing the memory using pp_free().
     pp_float_array_t *pp_allocate_float_array(size_t len);
 
+    /// @brief Free allocated memory for all pp functions that allocate and return a pointer.
+    /// @param ptr The pointer to free.
+    void pp_free(void* ptr);
+    
     /// @brief Reset a float array to zero.
     /// @param array The float array to reset.
     void pp_reset_float_array(pp_float_array_t *array);
@@ -310,7 +322,7 @@ extern "C"
     /// @brief Register a callback for subscription events.
     /// @param evloop The event loop.
     /// @param cb The callback function.
-    /// @param p The context pointer.
+    /// @param p The context pointer, will contain the pp_t handle.
     /// @return True if the callback was successfully registered, false otherwise.
     bool pp_event_handler_register_subscribe_cb(const pp_evloop_t *evloop, esp_event_handler_t cb, void *p);
 
@@ -364,8 +376,9 @@ extern "C"
     /// @return The context pointer.
     void *pp_get_context(pp_t pp);
 
+    /// @brief Supply malloc, realloc and free functions.
+    /// @param hooks The hooks structure containing the functions.
+    void pp_init_hooks(pp_hooks *hooks);
 #ifdef __cplusplus
 } // extern "C"
-#endif
-
 #endif

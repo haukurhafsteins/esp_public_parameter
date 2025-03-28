@@ -42,6 +42,7 @@ typedef struct
 static public_parameter_t par_list[MAX_PUBLIC_PARAMETERS];
 static std::map<std::string, public_parameter_t *> nameToPP;
 static int32_t event_id_counter = ID_COUNTER_START;
+static pp_hooks hooks = {malloc, calloc, free};
 
 static const char *TAG = "PP";
 
@@ -550,14 +551,9 @@ void pp_reset_int16_array(pp_int16_array_t *array)
     memset(array->data, 0, sizeof(int16_t) * array->len);
 }
 
-/// @brief Allocate memory for a float array.
-/// The array is allocated with calloc, so all values are initialized to 0.
-/// To free the array, use free().
-/// @param len Number of elements in the array
-/// @return A pointer to the allocated array, or NULL if allocation failed.
 pp_float_array_t *pp_allocate_float_array(size_t len)
 {
-    pp_float_array_t *p = (pp_float_array_t *)calloc(1, pp_get_float_array_byte_size(len));
+    pp_float_array_t *p = (pp_float_array_t *)hooks.calloc_fn(1, pp_get_float_array_byte_size(len));
     if (p == 0)
     {
         ESP_LOGE(TAG, "Failed to allocate %d bytes", len);
@@ -679,4 +675,18 @@ void *pp_get_context(pp_t pp)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
     return p->state.context;
+}
+
+void pp_init_hooks(pp_hooks *h)
+{
+    if (h == NULL)
+        return;
+    hooks = *h;
+}
+
+void pp_free(void *ptr)
+{
+    if (ptr == NULL)
+        return;
+    hooks.free_fn(ptr);
 }
