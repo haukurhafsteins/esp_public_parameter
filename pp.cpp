@@ -30,6 +30,7 @@ typedef struct
     struct
     {
         std::map<esp_event_loop_handle_t, pp_evloop_t> subscription_list;
+        pp_subscribe_cb_t subscribe_cb;
         int32_t newstate_id;
         int32_t write_id;
         /// @brief True if the parameter is active, false if it is inactive.
@@ -98,6 +99,38 @@ static bool pp_newstate_irq(public_parameter_t *p, void *data, size_t data_size)
         return (size == 0); // all sends successful
     }
     return false;
+}
+
+static bool pp_event_handler_register(const pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void *p)
+{
+    esp_err_t err;
+    if (evloop->loop_handle == NULL)
+    {
+        err = esp_event_handler_register(evloop->base, id, cb, p);
+        ESP_ERROR_CHECK(err);
+    }
+    else
+    {
+        err = esp_event_handler_instance_register_with(evloop->loop_handle, evloop->base, id, cb, p, NULL);
+        ESP_ERROR_CHECK(err);
+    }
+    return err == ESP_OK;
+}
+
+static bool pp_event_handler_unregister(const pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb)
+{
+    esp_err_t err;
+    if (evloop->loop_handle == NULL)
+    {
+        err = esp_event_handler_unregister(evloop->base, id, cb);
+        ESP_ERROR_CHECK(err);
+    }
+    else
+    {
+        err = esp_event_handler_unregister_with(evloop->loop_handle, evloop->base, id, cb);
+        ESP_ERROR_CHECK(err);
+    }
+    return err == ESP_OK;
 }
 
 static pp_t pp_create(const char *name, const pp_evloop_t *evloop, parameter_type_t type, esp_event_handler_t event_write_cb, const void *valueptr)
@@ -243,45 +276,25 @@ static bool pp_json_bool(pp_t pp, char *buf, size_t *bufsize, bool json)
 // Public stuff
 //-----------------------------------------------------------------------
 
-bool pp_event_handler_register_subscribe_cb(const pp_evloop_t *evloop, esp_event_handler_t cb, void *p)
+bool pp_register_subscribe_cb(const pp_t pp, pp_subscribe_cb_t cb)
 {
-    return pp_event_handler_register(evloop, ID_SUBSCRIBE, cb, p);
-}
-bool pp_event_handler_register_unsubscribe_cb(const pp_evloop_t *evloop, esp_event_handler_t cb, void *p)
-{
-    return pp_event_handler_register(evloop, ID_UNSUBSCRIBE, cb, p);
-}
-
-bool pp_event_handler_register(const pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void *p)
-{
-    esp_err_t err;
-    if (evloop->loop_handle == NULL)
+    public_parameter_t *p = (public_parameter_t *)pp;
+    if (pp == NULL)
     {
-        err = esp_event_handler_register(evloop->base, id, cb, p);
-        ESP_ERROR_CHECK(err);
+        ESP_LOGW(TAG, "%s: parameter is NULL", __func__);
+        return false;
     }
-    else
+    if (p->state.subscribe_cb == cb)
     {
-        err = esp_event_handler_instance_register_with(evloop->loop_handle, evloop->base, id, cb, p, NULL);
-        ESP_ERROR_CHECK(err);
+        ESP_LOGW(TAG, "%s: %s already registered", __func__, p->conf.name);
+        return false;
     }
-    return err == ESP_OK;
-}
-
-bool pp_event_handler_unregister(const pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb)
-{
-    esp_err_t err;
-    if (evloop->loop_handle == NULL)
+    p->state.subscribe_cb = cb;
+    return pp_event_handler_register(p->conf.owner, ID_SUBSCRIBE, [](void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
     {
-        err = esp_event_handler_unregister(evloop->base, id, cb);
-        ESP_ERROR_CHECK(err);
-    }
-    else
-    {
-        err = esp_event_handler_unregister_with(evloop->loop_handle, evloop->base, id, cb);
-        ESP_ERROR_CHECK(err);
-    }
-    return err == ESP_OK;
+        public_parameter_t *p = (public_parameter_t *)arg;
+        p->state.subscribe_cb(p, true);
+    }, pp);
 }
 
 pp_t pp_create_int32(const char *name, const pp_evloop_t *evloop, esp_event_handler_t event_write_cb, const int32_t *valueptr)
@@ -371,7 +384,7 @@ bool pp_subscribe(pp_t pp, const pp_evloop_t *evloop, esp_event_handler_t event_
     if (pp_event_handler_register(evloop, p->state.newstate_id, event_cb, p))
     {
         p->state.subscription_list[evloop->loop_handle] = *evloop;
-        if (p->conf.owner != NULL)
+        if (p->conf.owner != NULL && p->state.subscribe_cb != NULL)
             evloop_post(p->conf.owner->loop_handle, p->conf.owner->base, ID_SUBSCRIBE, pp, sizeof(pp_t));
 
         return true;

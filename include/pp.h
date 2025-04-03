@@ -74,6 +74,8 @@ extern "C"
     /// @param json If true, a JSON document is returned; otherwise, a single JSON variable is returned.
     typedef bool (*pp_json_cb_t)(pp_t pp, char *buf, size_t *bufsize, bool json);
 
+    typedef void (*pp_subscribe_cb_t)(pp_t pp, bool subscribe);
+
     /// @brief Get a parameter by its name.
     /// @param name The name of the parameter.
     /// @return A handle to the parameter, or NULL if not found.
@@ -310,28 +312,29 @@ extern "C"
     /// @param cb The callback function.
     /// @param p The context pointer.
     /// @return True if the event handler was successfully registered, false otherwise.
-    bool pp_event_handler_register(const pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void *p);
+    // bool pp_event_handler_register(const pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb, void *p);
 
     /// @brief Unregister an event handler for a specific event loop.
     /// @param evloop The event loop.
     /// @param id The event ID.
     /// @param cb The callback function.
     /// @return True if the event handler was successfully unregistered, false otherwise.
-    bool pp_event_handler_unregister(const pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb);
+    // bool pp_event_handler_unregister(const pp_evloop_t *evloop, int32_t id, esp_event_handler_t cb);
 
     /// @brief Register a callback for subscription events.
     /// @param evloop The event loop.
     /// @param cb The callback function.
     /// @param p The context pointer, will contain the pp_t handle.
     /// @return True if the callback was successfully registered, false otherwise.
-    bool pp_event_handler_register_subscribe_cb(const pp_evloop_t *evloop, esp_event_handler_t cb, void *p);
+    bool pp_register_subscribe_cb(const pp_t pp, pp_subscribe_cb_t cb);
+    // bool pp_event_handler_register_subscribe_cb(const pp_evloop_t *evloop, esp_event_handler_t cb, void *p);
 
     /// @brief Register a callback for unsubscription events.
     /// @param evloop The event loop.
     /// @param cb The callback function.
     /// @param p The context pointer.
     /// @return True if the callback was successfully registered, false otherwise.
-    bool pp_event_handler_register_unsubscribe_cb(const pp_evloop_t *evloop, esp_event_handler_t cb, void *p);
+    // bool pp_event_handler_register_unsubscribe_cb(const pp_evloop_t *evloop, esp_event_handler_t cb, void *p);
 
     /// @brief Subscribe to a parameter.
     /// @param pp The parameter handle.
