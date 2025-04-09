@@ -21,16 +21,18 @@ extern "C"
     /// @brief Enumeration of parameter types.
     typedef enum
     {
-        TYPE_UNKNOWN = -1, ///< Unknown type.
-        TYPE_INT32,        ///< 32-bit integer type.
-        TYPE_INT64,        ///< 64-bit integer type.
-        TYPE_FLOAT,        ///< Floating-point type.
-        TYPE_BOOL,         ///< Boolean type.
-        TYPE_FLOAT_ARRAY,  ///< Array of floating-point numbers.
-        TYPE_INT16_ARRAY,  ///< Array of 16-bit integers.
-        TYPE_EXECUTE,      ///< Execute type (used for triggering actions).
-        TYPE_STRING,       ///< String type.
-        TYPE_BINARY        ///< Binary data type.
+        TYPE_UNKNOWN = 0,          ///< Unknown type.
+        TYPE_INT32 = 0x1,          ///< 32-bit integer type.
+        TYPE_INT64 = 0x2,          ///< 64-bit integer type.
+        TYPE_FLOAT = 0x4,          ///< Floating-point type.
+        TYPE_BOOL = 0x8,           ///< Boolean type.
+        TYPE_FLOAT_ARRAY = 0x10,   ///< Array of floating-point numbers.
+        TYPE_INT16_ARRAY = 0x20,   ///< Array of 16-bit integers.
+        TYPE_EXECUTE = 0x40,       ///< Execute type (used for triggering actions).
+        TYPE_STRING = 0x80,        ///< String type.
+        TYPE_BINARY = 0x100,       ///< Binary data type.
+        TYPE_ALL = 0x7FFFFFFF,     ///< All types (used for masking).
+        TYPE_HIDE = 0x80000000,    ///< Hidden type (not shown in the list).
     } parameter_type_t;
 
     /// @brief Structure representing a float array.
@@ -133,8 +135,8 @@ extern "C"
 
     /// @brief Allocate memory for a float array.
     /// @param len The length of the float array.
-    /// @return A pointer to the allocated float array, or NULL if allocation failed. The user
-    ///         is responsible for freeing the memory using pp_free().
+    /// @return A pointer to the allocated float array, or NULL if allocation failed. 
+    /// @attention The user is responsible for freeing the memory using pp_free().
     pp_float_array_t *pp_allocate_float_array(size_t len);
 
     /// @brief Free allocated memory for all pp functions that allocate and return a pointer.
@@ -382,6 +384,17 @@ extern "C"
     /// @brief Supply malloc, realloc and free functions.
     /// @param hooks The hooks structure containing the functions.
     void pp_init_hooks(pp_hooks *hooks);
+
+    /// @brief Get the number of parameters.
+    /// @return The number of parameters.
+    size_t pp_get_parameter_count(void);
+
+    /// @brief Get a list of all parameters as JSON.
+    /// @param buf The buffer to store the JSON string. 
+    /// @return True if the JSON string was successfully generated, false otherwise.
+    /// @attention The user is responsible for freeing the buffer using pp_free().
+    bool pp_get_parameter_list_as_json(char **buf, parameter_type_t type);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

@@ -291,10 +291,9 @@ bool pp_register_subscribe_cb(const pp_t pp, pp_subscribe_cb_t cb)
     }
     p->state.subscribe_cb = cb;
     return pp_event_handler_register(p->conf.owner, ID_SUBSCRIBE, [](void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
-    {
+                                     {
         public_parameter_t *p = (public_parameter_t *)arg;
-        p->state.subscribe_cb(p, true);
-    }, pp);
+        p->state.subscribe_cb(p, true); }, pp);
 }
 
 pp_t pp_create_int32(const char *name, const pp_evloop_t *evloop, esp_event_handler_t event_write_cb, const int32_t *valueptr)
@@ -651,13 +650,14 @@ int pp_get_info(int index, pp_info_t *info)
 {
     while (index < MAX_PUBLIC_PARAMETERS)
     {
-        if (par_list[index].conf.name != NULL)
+        public_parameter_t *p = &par_list[index];
+        if (p->conf.name != NULL)
         {
-            info->name = par_list[index].conf.name;
-            info->type = par_list[index].conf.type;
-            info->owner = par_list[index].conf.owner;
-            info->subscriptions = par_list[index].state.subscription_list.size();
-            info->valueptr = par_list[index].state.valueptr;
+            info->name = p->conf.name;
+            info->type = p->conf.type;
+            info->owner = p->conf.owner;
+            info->subscriptions = p->state.subscription_list.size();
+            info->valueptr = p->state.valueptr;
             return index++;
         }
         index++;
@@ -702,4 +702,53 @@ void pp_free(void *ptr)
     if (ptr == NULL)
         return;
     hooks.free_fn(ptr);
+}
+
+size_t pp_get_parameter_count(void)
+{
+    return nameToPP.size();
+}
+
+bool pp_get_parameter_list_as_json(char **buf, parameter_type_t type)
+{
+    if (buf == NULL)
+        return false;
+
+    size_t parCount = pp_get_parameter_count();
+    // Go through all parameters and find the length of all the names
+    size_t totalNameLength = 0;
+    for (auto it = nameToPP.begin(); it != nameToPP.end(); it++)
+    {
+        totalNameLength += strlen(it->first.c_str()) + 3; // 2 for quotes and 1 for comma
+    }
+    totalNameLength += 2; // 2 for brackets
+    char *json = (char *)hooks.malloc_fn(totalNameLength);
+    if (json == NULL)
+    {
+        ESP_LOGE(TAG, "%s: Failed to allocate memory for json", __func__);
+        return false;
+    }
+    memset(json, 0, totalNameLength);
+    size_t len = 0;
+    json[len++] = '[';
+    const char *comma = NULL;
+    for (auto it = nameToPP.begin(); it != nameToPP.end(); it++)
+    {
+        public_parameter_t *p = it->second;
+        if (!(p->conf.type & type))
+            continue;
+
+        if (comma != NULL)
+            json[len++] = ',';
+        comma = ",";
+        size_t nameLen = strlen(it->first.c_str());
+        json[len++] = '"';
+        memcpy(&json[len], it->first.c_str(), nameLen);
+        len += nameLen;
+        json[len++] = '"';
+    }
+    json[len++] = ']';
+    json[len] = 0;
+    *buf = json;
+    return true;
 }
