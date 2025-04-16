@@ -66,7 +66,8 @@ extern "C"
         size_t subscriptions;     ///< Number of subscriptions to the parameter.
     } pp_info_t;
 
-    typedef void *pp_t;       ///< Opaque handle to a parameter.
+    typedef struct public_parameter_t public_parameter_t; ///< Opaque handle to a public parameter.
+    typedef public_parameter_t *pp_t;       ///< Opaque handle to a parameter.
     typedef void *pp_event_t; ///< Opaque handle to an event.
 
     /// @brief Callback function to convert a parameter to a JSON string.
@@ -74,7 +75,7 @@ extern "C"
     /// @param buf The buffer to write the JSON string to.
     /// @param bufsize The size of the buffer.
     /// @param json If true, a JSON document is returned; otherwise, a single JSON variable is returned.
-    typedef bool (*pp_json_cb_t)(pp_t pp, char *buf, size_t *bufsize, bool json);
+    typedef bool (*pp_json_cb_t)(pp_t pp, const char* format, char *buf, size_t *bufsize, bool json);
 
     typedef void (*pp_subscribe_cb_t)(pp_t pp, bool subscribe);
 
@@ -300,13 +301,21 @@ extern "C"
     /// @return True if the write event was successfully posted, false otherwise.
     bool pp_post_write_string(pp_t pp, const char *str);
 
-    /// @brief Get the parameter's value as a string.
+    /// @brief Get the parameter's value as string.
     /// @param pp The parameter handle.
+    /// @param format The format string. If NULL, the default format is used.
     /// @param buf The buffer to store the string.
     /// @param bufsize The size of the buffer.
-    /// @param json If true, the output will be in JSON format.
     /// @return True if the value was successfully converted to a string, false otherwise.
-    bool pp_get_as_string(pp_t pp, char *buf, size_t *bufsize, bool json);
+    bool pp_to_string(pp_t pp, const char* format, char *buf, size_t *bufsize);
+
+    /// @brief Get the parameter's value as json string.
+    /// @param pp The parameter handle.
+    /// @param format The format string. If NULL, the default format is used.
+    /// @param buf The buffer to store the string.
+    /// @param bufsize The size of the buffer.
+    /// @return True if the value was successfully converted to a string, false otherwise.
+    bool pp_to_json_string(pp_t pp, const char* format, char *buf, size_t *bufsize);
 
     /// @brief Register an event handler for a specific event loop.
     /// @param evloop The event loop.

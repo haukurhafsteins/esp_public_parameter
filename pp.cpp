@@ -15,7 +15,7 @@
 #define ID_COUNTER_START 1002
 #define POST_WAIT_MS 50
 
-typedef struct
+typedef struct public_parameter_t
 {
     // Configuration part
     struct
@@ -38,6 +38,11 @@ typedef struct
         const void *valueptr;
         void *context;
     } state;
+
+    bool operator==(const pp_t& other) const {
+        return state.newstate_id == other->state.newstate_id;
+    }
+
 } public_parameter_t;
 
 static public_parameter_t par_list[MAX_PUBLIC_PARAMETERS];
@@ -192,7 +197,7 @@ static int pp_json_no_valueptr(const char *name, char *buf, size_t *bufsize, boo
     return snprintf(buf, *bufsize, "null");
 }
 
-static bool pp_json_int32(pp_t pp, char *buf, size_t *bufsize, bool json)
+static bool pp_json_int32(pp_t pp, const char* format, char *buf, size_t *bufsize, bool json)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
     if (p->state.valueptr != NULL)
@@ -210,7 +215,7 @@ static bool pp_json_int32(pp_t pp, char *buf, size_t *bufsize, bool json)
     return true;
 }
 
-static bool pp_json_int64(pp_t pp, char *buf, size_t *bufsize, bool json)
+static bool pp_json_int64(pp_t pp, const char* format, char *buf, size_t *bufsize, bool json)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
     if (p->state.valueptr != NULL)
@@ -228,16 +233,20 @@ static bool pp_json_int64(pp_t pp, char *buf, size_t *bufsize, bool json)
     return true;
 }
 
-static bool pp_json_float(pp_t pp, char *buf, size_t *bufsize, bool json)
+static bool pp_json_float(pp_t pp, const char* format, char *buf, size_t *bufsize, bool json)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
     if (p->state.valueptr != NULL)
     {
+        if (format == NULL)
+            format = "%f"; // default format
         float value = *((float *)p->state.valueptr);
+        char valStr[32];
+        snprintf(valStr, sizeof(valStr), format, value);
         if (json)
-            *bufsize = snprintf(buf, *bufsize, "{\"%s\":%f}", p->conf.name, value);
+            *bufsize = snprintf(buf, *bufsize, "{\"%s\":%s}", p->conf.name, valStr);
         else
-            *bufsize = snprintf(buf, *bufsize, "%f", value);
+            *bufsize = snprintf(buf, *bufsize, "%s", valStr);
     }
     else
     {
@@ -246,7 +255,7 @@ static bool pp_json_float(pp_t pp, char *buf, size_t *bufsize, bool json)
     return true;
 }
 
-static bool pp_json_bool(pp_t pp, char *buf, size_t *bufsize, bool json)
+static bool pp_json_bool(pp_t pp, const char* format, char *buf, size_t *bufsize, bool json)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
     if (p->state.valueptr != NULL)
@@ -638,12 +647,20 @@ bool pp_set_valueptr(pp_t pp, const void *valueptr)
     return true;
 }
 
-bool pp_get_as_string(pp_t pp, char *buf, size_t *bufsize, bool json)
+bool pp_to_string(pp_t pp, const char* format, char *buf, size_t *bufsize)
 {
     public_parameter_t *p = (public_parameter_t *)pp;
     if (p->conf.json_cb == NULL)
         return false;
-    return p->conf.json_cb(p, buf, bufsize, false);
+    return p->conf.json_cb(p, format, buf, bufsize, false);
+}
+
+bool pp_to_json_string(pp_t pp, const char* format, char *buf, size_t *bufsize)
+{
+    public_parameter_t *p = (public_parameter_t *)pp;
+    if (p->conf.json_cb == NULL)
+        return false;
+    return p->conf.json_cb(p, format, buf, bufsize, false);
 }
 
 int pp_get_info(int index, pp_info_t *info)
@@ -714,7 +731,6 @@ bool pp_get_parameter_list_as_json(char **buf, parameter_type_t type)
     if (buf == NULL)
         return false;
 
-    size_t parCount = pp_get_parameter_count();
     // Go through all parameters and find the length of all the names
     size_t totalNameLength = 0;
     for (auto it = nameToPP.begin(); it != nameToPP.end(); it++)
