@@ -128,12 +128,20 @@ static bool pp_event_handler_unregister(const pp_evloop_t *evloop, int32_t id, e
     if (evloop->loop_handle == NULL)
     {
         err = esp_event_handler_unregister(evloop->base, id, cb);
-        ESP_ERROR_CHECK(err);
+        if (err != ESP_OK)
+        {
+            ESP_LOGE(TAG, "%s: Failed unregistering %s from %p - %s", __func__, evloop->base, cb, esp_err_to_name(err));
+            esp_backtrace_print(5);
+        }
     }
     else
     {
         err = esp_event_handler_unregister_with(evloop->loop_handle, evloop->base, id, cb);
-        ESP_ERROR_CHECK(err);
+        if (err != ESP_OK)
+        {
+            ESP_LOGE(TAG, "%s: Failed unregistering %s from %p - %s", __func__, evloop->base, cb, esp_err_to_name(err));
+            esp_backtrace_print(5);
+        }
     }
     return err == ESP_OK;
 }
