@@ -564,16 +564,16 @@ void pp_reset_int16_array(pp_int16_array_t *array)
     memset(array->data, 0, sizeof(int16_t) * array->len);
 }
 
-pp_float_array_t *pp_allocate_float_array(size_t len)
+pp_float_array_t *pp_allocate_float_array(size_t nrFloats)
 {
-    pp_float_array_t *p = (pp_float_array_t *)hooks.calloc_fn(1, pp_get_float_array_byte_size(len));
+    pp_float_array_t *p = (pp_float_array_t *)hooks.calloc_fn(1, pp_get_float_array_byte_size(nrFloats));
     if (p == 0)
     {
-        ESP_LOGE(TAG, "Failed to allocate %d bytes", len);
+        ESP_LOGE(TAG, "Failed to allocate %d bytes", nrFloats);
         esp_backtrace_print(5);
         return NULL;
     }
-    p->len = len;
+    p->len = nrFloats;
     return p;
 }
 
