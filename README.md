@@ -48,7 +48,7 @@ To get a parameter as a JSON string:
 ```c
 char buf[128];
 size_t bufsize = sizeof(buf);
-pp_get_as_string(my_int32_param, buf, &bufsize, true);
+pp_to_json_string(my_int32_param, NULL, buf, &bufsize);
 ```
 ### Deleting Parameters
 When a parameter is no longer needed, you can delete it:
@@ -89,9 +89,9 @@ void app_main() {
 
     char buf[128];
     size_t bufsize = sizeof(buf);
-    pp_get_as_string(my_float_param, buf, &bufsize, true);
+    pp_to_json_string(my_float_param, "%.3f", buf, &bufsize);
 
-    printf("JSON: %s\n", buf);  // Output: {"my_float":3.140000}
+    printf("JSON: %s\n", buf);  // Output: {"my_float":3.140}
 }
 ```
 #### Example 3: Register a callback to convert a parameter/object to json

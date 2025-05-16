@@ -21,16 +21,18 @@ extern "C"
     /// @brief Enumeration of parameter types.
     typedef enum
     {
-        TYPE_UNKNOWN = -1, ///< Unknown type.
-        TYPE_INT32,        ///< 32-bit integer type.
-        TYPE_INT64,        ///< 64-bit integer type.
-        TYPE_FLOAT,        ///< Floating-point type.
-        TYPE_BOOL,         ///< Boolean type.
-        TYPE_FLOAT_ARRAY,  ///< Array of floating-point numbers.
-        TYPE_INT16_ARRAY,  ///< Array of 16-bit integers.
-        TYPE_EXECUTE,      ///< Execute type (used for triggering actions).
-        TYPE_STRING,       ///< String type.
-        TYPE_BINARY        ///< Binary data type.
+        TYPE_UNKNOWN = 0,          ///< Unknown type.
+        TYPE_INT32 = 0x1,          ///< 32-bit integer type.
+        TYPE_INT64 = 0x2,          ///< 64-bit integer type.
+        TYPE_FLOAT = 0x4,          ///< Floating-point type.
+        TYPE_BOOL = 0x8,           ///< Boolean type.
+        TYPE_FLOAT_ARRAY = 0x10,   ///< Array of floating-point numbers.
+        TYPE_INT16_ARRAY = 0x20,   ///< Array of 16-bit integers.
+        TYPE_EXECUTE = 0x40,       ///< Execute type (used for triggering actions).
+        TYPE_STRING = 0x80,        ///< String type.
+        TYPE_BINARY = 0x100,       ///< Binary data type.
+        TYPE_ALL = 0x7FFFFFFF,     ///< All types (used for masking).
+        TYPE_HIDE = 0x80000000,    ///< Hidden type (not shown in the list).
     } parameter_type_t;
 
     /// @brief Structure representing a float array.
@@ -64,7 +66,8 @@ extern "C"
         size_t subscriptions;     ///< Number of subscriptions to the parameter.
     } pp_info_t;
 
-    typedef void *pp_t;       ///< Opaque handle to a parameter.
+    typedef struct public_parameter_t public_parameter_t; ///< Opaque handle to a public parameter.
+    typedef public_parameter_t *pp_t;       ///< Opaque handle to a parameter.
     typedef void *pp_event_t; ///< Opaque handle to an event.
 
     /// @brief Callback function to convert a parameter to a JSON string.
@@ -72,7 +75,7 @@ extern "C"
     /// @param buf The buffer to write the JSON string to.
     /// @param bufsize The size of the buffer.
     /// @param json If true, a JSON document is returned; otherwise, a single JSON variable is returned.
-    typedef bool (*pp_json_cb_t)(pp_t pp, char *buf, size_t *bufsize, bool json);
+    typedef bool (*pp_json_cb_t)(pp_t pp, const char* format, char *buf, size_t *bufsize, bool json);
 
     typedef void (*pp_subscribe_cb_t)(pp_t pp, bool subscribe);
 
@@ -133,8 +136,8 @@ extern "C"
 
     /// @brief Allocate memory for a float array.
     /// @param len The length of the float array.
-    /// @return A pointer to the allocated float array, or NULL if allocation failed. The user
-    ///         is responsible for freeing the memory using pp_free().
+    /// @return A pointer to the allocated float array, or NULL if allocation failed. 
+    /// @attention The user is responsible for freeing the memory using pp_free().
     pp_float_array_t *pp_allocate_float_array(size_t len);
 
     /// @brief Free allocated memory for all pp functions that allocate and return a pointer.
@@ -298,13 +301,21 @@ extern "C"
     /// @return True if the write event was successfully posted, false otherwise.
     bool pp_post_write_string(pp_t pp, const char *str);
 
-    /// @brief Get the parameter's value as a string.
+    /// @brief Get the parameter's value as string.
     /// @param pp The parameter handle.
+    /// @param format The format string. If NULL, the default format is used.
     /// @param buf The buffer to store the string.
     /// @param bufsize The size of the buffer.
-    /// @param json If true, the output will be in JSON format.
     /// @return True if the value was successfully converted to a string, false otherwise.
-    bool pp_get_as_string(pp_t pp, char *buf, size_t *bufsize, bool json);
+    bool pp_to_string(pp_t pp, const char* format, char *buf, size_t *bufsize);
+
+    /// @brief Get the parameter's value as json string.
+    /// @param pp The parameter handle.
+    /// @param format The format string. If NULL, the default format is used.
+    /// @param buf The buffer to store the string.
+    /// @param bufsize The size of the buffer.
+    /// @return True if the value was successfully converted to a string, false otherwise.
+    bool pp_to_json_string(pp_t pp, const char* format, char *buf, size_t *bufsize);
 
     /// @brief Register an event handler for a specific event loop.
     /// @param evloop The event loop.
@@ -382,6 +393,17 @@ extern "C"
     /// @brief Supply malloc, realloc and free functions.
     /// @param hooks The hooks structure containing the functions.
     void pp_init_hooks(pp_hooks *hooks);
+
+    /// @brief Get the number of parameters.
+    /// @return The number of parameters.
+    size_t pp_get_parameter_count(void);
+
+    /// @brief Get a list of all parameters as JSON.
+    /// @param buf The buffer to store the JSON string. 
+    /// @return True if the JSON string was successfully generated, false otherwise.
+    /// @attention The user is responsible for freeing the buffer using pp_free().
+    bool pp_get_parameter_list_as_json(char **buf, parameter_type_t type);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
