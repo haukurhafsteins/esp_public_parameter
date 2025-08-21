@@ -13,7 +13,7 @@
 #define ID_SUBSCRIBE 1000
 #define ID_UNSUBSCRIBE 1001
 #define ID_COUNTER_START 1002
-#define POST_WAIT_MS 50
+#define POST_WAIT_MS 10
 
 typedef struct public_parameter_t
 {
