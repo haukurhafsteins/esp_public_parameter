@@ -13,11 +13,19 @@ class ParameterBase
 public:
     virtual ~ParameterBase() = default;
     const char *getName() const { return name; };
-    virtual bool notify() const = 0;
-
+    virtual bool notify() = 0;
+    void addSubscriber(RtosMsgBuffer &subscriber)
+    {
+        subscribers.push_back(subscriber);
+    }
+    void removeSubscriber(RtosMsgBuffer &subscriber)
+    {
+        subscribers.remove_if([&subscriber](const RtosMsgBuffer &s) { return &s == &subscriber; });
+    }
+protected:
+    std::list<RtosMsgBuffer> subscribers;
 private:
     const char *name;
-    std::list<RtosMsgBuffer> subscribers;
 };
 
 //-----------------------------------------------------------------------------
@@ -29,7 +37,7 @@ public:
     ~Parameter() = default;
 
     const T *getData() const { return data; }
-    bool notify()
+    bool notify() override
     {
         for (auto &subscriber : subscribers)
         {
@@ -68,13 +76,14 @@ public:
         return false;
     }
     template<typename C>
-    static bool subscribe(const char *name, RtosMsgBuffer &receiver, const C id)
+    static bool subscribe(const char *name, RtosMsgBuffer &receiver, const C msgId)
     {
         auto it = params.find(name);
         if (it == params.end())
         {
             return false;
         }
+
         return true;
     }
 
